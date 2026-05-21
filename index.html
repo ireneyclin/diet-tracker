@@ -607,6 +607,13 @@ const store = {
 };
 
 // ============ 建議值計算 ============
+// 依文獻健康分配原則計算每日份量
+// 蛋白質：減脂30% / 維持20% / 增肌25%（總熱量比例，文獻範圍）
+// 蔬菜固定 3 份（國健署建議下限）
+// 水果固定 2 份（國健署 2-4 取保守值）
+// 奶類固定 1 份
+// 油脂 25%（文獻共識 20-35% 中位）
+// 主食：剩餘熱量，但不低於總熱量 45%（避免過低碳水）
 function calcSuggestion(bmr, activityFactor, goalType) {
   const tdee = bmr * activityFactor;
   const targets = {
@@ -615,29 +622,68 @@ function calcSuggestion(bmr, activityFactor, goalType) {
     "gain-slow": tdee + 200, "gain-mid": tdee + 350, "gain-fast": tdee + 500,
   };
   const cal = targets[goalType] || tdee;
+
+  // 固定份數的元素 → 熱量
+  const VEG_SERVINGS = 3, VEG_KCAL_PER = 25;
+  const FRUIT_SERVINGS = 1, FRUIT_KCAL_PER = 60;
+  const DAIRY_SERVINGS = 1, DAIRY_KCAL_PER = 120; // 低脂奶
+  const vegKcal = VEG_SERVINGS * VEG_KCAL_PER;
+  const fruitKcal = FRUIT_SERVINGS * FRUIT_KCAL_PER;
+  const dairyKcal = DAIRY_SERVINGS * DAIRY_KCAL_PER;
+
+  // 蛋白質：依目標決定總熱量比例
   let proteinRatio = 0.20;
   if (goalType.startsWith("cut")) proteinRatio = 0.30;
   else if (goalType.startsWith("gain")) proteinRatio = 0.25;
   const proteinKcal = cal * proteinRatio;
-  const proteinServings = Math.round(proteinKcal / 75);
-  const vegKcal = 5 * 25;
-  const fruitKcal = 1.5 * 60;
-  const dairyKcal = 1.5 * 120;
+  // 扣除奶類已提供的蛋白質（1份奶≈8g蛋白≈56kcal）
+  const proteinFromDairy = DAIRY_SERVINGS * 56;
+  const proteinKcalRemain = Math.max(proteinKcal - proteinFromDairy, 0);
+  const proteinServings = Math.round(proteinKcalRemain / 75);
+
+  // 油脂：總脂肪攝取占總熱量 25%，但「油脂類份數」只算額外用油（炒菜油、堅果、美乃滋等）
+  // 因為蛋白質、奶、主食本身就含部分脂肪（估約占總脂肪 60-70%）
+  // 所以額外油脂 = 總脂肪熱量 × 30%
   const fatRatio = 0.25;
-  const fatKcal = cal * fatRatio;
-  const fatServings = Math.round(fatKcal / 45);
-  const stapleKcal = Math.max(cal - proteinKcal - vegKcal - fruitKcal - dairyKcal - fatKcal, cal * 0.3);
+  const totalFatKcal = cal * fatRatio;
+  const addedFatKcal = totalFatKcal * 0.35;
+  const fatServings = Math.round(addedFatKcal / 45);
+
+  // 主食：剩餘熱量，但保證最少 45% 總熱量
+  // 主食配額 = 總熱量 - 蛋白質殘留 - 蔬菜 - 水果 - 奶 - 總脂肪
+  const usedKcal = proteinKcalRemain + vegKcal + fruitKcal + dairyKcal + totalFatKcal;
+  const stapleKcalIdeal = cal - usedKcal;
+  const stapleKcalMin = cal * 0.45;
+  const stapleKcal = Math.max(stapleKcalIdeal, stapleKcalMin);
   const stapleServings = Math.round(stapleKcal / 70);
+
+  // 實際分配的熱量總和（讓使用者看到比例）
+  const actualKcal = proteinKcalRemain + proteinFromDairy + (stapleServings * 70) +
+                     vegKcal + fruitKcal + dairyKcal + totalFatKcal;
+
   return {
     protein: { min: Math.max(proteinServings - 1, 3), max: proteinServings + 1, enabled: true },
     staple: { min: Math.max(stapleServings - 1, 3), max: stapleServings + 1, enabled: true },
-    veg: { min: 4, max: 6, enabled: true },
-    fruit: { min: 1, max: 2, enabled: true },
-    dairy: { min: 1, max: 2, enabled: true },
+    veg: { min: VEG_SERVINGS, max: VEG_SERVINGS + 1, enabled: true },
+    fruit: { min: FRUIT_SERVINGS, max: FRUIT_SERVINGS, enabled: true },
+    dairy: { min: DAIRY_SERVINGS, max: DAIRY_SERVINGS + 1, enabled: true },
     fat: { min: Math.max(fatServings - 1, 2), max: fatServings + 1, enabled: false },
-    water: { min: 2000, max: 2500, enabled: true },
+    // 水保持使用者目前設定，套用時不覆蓋
     other: { min: 0, max: 0, enabled: true },
-    _meta: { tdee: Math.round(tdee), targetCal: Math.round(cal), goalType }
+    _meta: {
+      tdee: Math.round(tdee),
+      targetCal: Math.round(cal),
+      goalType,
+      actualCal: Math.round(actualKcal),
+      breakdown: {
+        protein: Math.round(proteinKcalRemain + proteinFromDairy),
+        staple: Math.round(stapleServings * 70),
+        veg: Math.round(vegKcal),
+        fruit: Math.round(fruitKcal),
+        dairy: Math.round(dairyKcal),
+        fat: Math.round(totalFatKcal),
+      }
+    }
   };
 }
 
@@ -1282,13 +1328,64 @@ function renderSettings(parent) {
   }, "使用建議值精靈"));
 
   if (state.goals._meta) {
-    parent.appendChild(h("div", { class: "analysis-result", style: { marginBottom: "16px" } }, [
-      h("div", { style: { fontSize: "12px", color: "#6B7A6B" } }, [
-        "目前目標熱量：",
-        h("strong", { style: { color: "#2D3D2A" } }, `${state.goals._meta.targetCal} kcal`),
-        `（TDEE ${state.goals._meta.tdee}）`
-      ])
+    const meta = state.goals._meta;
+    const metaCard = h("div", { class: "analysis-result", style: { marginBottom: "16px" } });
+
+    metaCard.appendChild(h("div", { style: { fontSize: "12px", color: "#6B7A6B", marginBottom: "10px" } }, [
+      "目標熱量：",
+      h("strong", { style: { color: "#2D3D2A", fontSize: "14px" } }, `${meta.targetCal} kcal`),
+      ` （TDEE ${meta.tdee}）`
     ]));
+
+    if (meta.breakdown) {
+      const b = meta.breakdown;
+      const total = b.protein + b.staple + b.veg + b.fruit + b.dairy + b.fat;
+      const items = [
+        { label: "蛋白質", kcal: b.protein, color: "#C97064" },
+        { label: "主食", kcal: b.staple, color: "#D4A574" },
+        { label: "蔬菜", kcal: b.veg, color: "#7A9471" },
+        { label: "水果", kcal: b.fruit, color: "#D97A8C" },
+        { label: "奶製品", kcal: b.dairy, color: "#A8B5C4" },
+        { label: "油脂", kcal: b.fat, color: "#B89968" },
+      ];
+
+      // 堆疊條
+      const stackBar = h("div", {
+        style: {
+          display: "flex", height: "10px", borderRadius: "5px",
+          overflow: "hidden", marginBottom: "10px", background: "#EDE4D3"
+        }
+      });
+      items.forEach(it => {
+        if (it.kcal > 0) {
+          stackBar.appendChild(h("div", {
+            style: { width: (it.kcal / total * 100) + "%", background: it.color },
+            title: `${it.label} ${it.kcal} kcal`
+          }));
+        }
+      });
+      metaCard.appendChild(stackBar);
+
+      // 文字列表
+      items.forEach(it => {
+        const pct = Math.round(it.kcal / total * 100);
+        metaCard.appendChild(h("div", {
+          style: { display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#6B7A6B", lineHeight: "1.8" }
+        }, [
+          h("span", {}, [
+            h("span", { style: { display: "inline-block", width: "8px", height: "8px", borderRadius: "2px", background: it.color, marginRight: "6px" } }),
+            it.label
+          ]),
+          h("span", {}, `${it.kcal} kcal (${pct}%)`)
+        ]));
+      });
+
+      metaCard.appendChild(h("div", {
+        style: { fontSize: "10px", color: "#8A998A", marginTop: "8px", lineHeight: "1.5" }
+      }, "依文獻健康分配：蔬菜 3 份、水果 2 份、奶 1 份固定；蛋白質依目標調整；其餘為主食與油脂"));
+    }
+
+    parent.appendChild(metaCard);
   }
 
   ELEMENTS.forEach(el => {
@@ -1826,15 +1923,31 @@ function openWizard() {
     ];
 
     if (step === 1) {
+      // BMR 輸入：用 ref 直接讀值，避免每次輸入就 render 導致失焦
+      const bmrInput = h("input", {
+        class: "form-input", type: "number",
+        value: bmr, placeholder: "例：1350",
+        style: { flex: "1" },
+        oninput: (e) => { bmr = e.target.value; }
+      });
       children.push(h("div", { class: "form-group" }, [
         h("div", { class: "form-label" }, "基礎代謝率 BMR（kcal/日）"),
-        h("input", {
-          class: "form-input", type: "number",
-          value: bmr, placeholder: "例：1350",
-          oninput: (e) => { bmr = e.target.value; render(); }
-        }),
-        h("div", { style: { fontSize: "11px", color: "#8A998A", marginTop: "4px" } },
-          "若不確定，可用 InBody 或公式估算（女性：655 + 9.6×kg + 1.8×cm − 4.7×歲）")
+        h("div", { style: { display: "flex", gap: "8px", alignItems: "center" } }, [
+          bmrInput,
+          h("button", {
+            class: "primary-btn",
+            style: { width: "auto", padding: "10px 16px", flex: "0 0 auto" },
+            onclick: () => {
+              bmr = bmrInput.value;
+              render();
+            }
+          }, "確認")
+        ]),
+        h("div", { style: { fontSize: "11px", color: "#8A998A", marginTop: "6px" } },
+          "若不確定，可用 InBody 或公式估算（女性：655 + 9.6×kg + 1.8×cm − 4.7×歲）"),
+        bmr ? h("div", {
+          style: { fontSize: "12px", color: "#4A6741", marginTop: "6px" }
+        }, `已輸入：${bmr} kcal`) : null
       ]));
       children.push(h("div", { class: "form-group" }, [
         h("div", { class: "form-label" }, "活動量"),
@@ -1851,7 +1964,13 @@ function openWizard() {
       ]));
       children.push(h("button", {
         class: "primary-btn", disabled: !bmr,
-        onclick: () => { step = 2; render(); }
+        onclick: () => {
+          // 跳下一步前確保抓到最新輸入值
+          bmr = bmrInput.value || bmr;
+          if (!bmr) return;
+          step = 2;
+          render();
+        }
       }, "下一步"));
     } else {
       children.push(h("div", { style: { fontSize: "13px", color: "#6B7A6B", marginBottom: "12px" } }, [
@@ -1871,6 +1990,8 @@ function openWizard() {
           class: "primary-btn", style: { flex: "2" }, disabled: !goalType,
           onclick: () => {
             const suggested = calcSuggestion(parseFloat(bmr), activity, goalType);
+            // 保留使用者的水份設定
+            suggested.water = state.goals.water || { min: 2000, max: 2500, enabled: true };
             state.goals = suggested;
             store.set("goals", state.goals);
             closeModal();
@@ -1879,7 +2000,7 @@ function openWizard() {
       ]));
       children.push(h("div", {
         style: { fontSize: "11px", color: "#8A998A", marginTop: "10px", textAlign: "center" }
-      }, "套用後可繼續手動微調"));
+      }, "套用後可繼續手動微調｜水份保留現設定"));
     }
 
     const modal = h("div", { class: "modal", onclick: (e) => e.stopPropagation() }, children);
