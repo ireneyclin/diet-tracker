@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#4A6741">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="飲控筆記">
+<title>飲控筆記</title>
+
+<link rel="manifest" href='data:application/manifest+json,{"name":"飲控筆記","short_name":"飲控","description":"個人飲食追蹤","start_url":".","display":"standalone","background_color":"%23F5EFE6","theme_color":"%234A6741","orientation":"portrait","icons":[{"src":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgcng9IjQwIiBmaWxsPSIjNEE2NzQxIi8+PHRleHQgeD0iOTYiIHk9IjEyOCIgZm9udC1zaXplPSI5MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFwcGxlIENvbG9yIEVtb2ppIj7wn42lPC90ZXh0Pjwvc3ZnPg==","sizes":"192x192","type":"image/svg+xml"},{"src":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwOCIgZmlsbD0iIzRBNjc0MSIvPjx0ZXh0IHg9IjI1NiIgeT0iMzQwIiBmb250LXNpemU9IjI0MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFwcGxlIENvbG9yIEVtb2ppIj7wn42lPC90ZXh0Pjwvc3ZnPg==","sizes":"512x512","type":"image/svg+xml"}]}'>
+
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgZmlsbD0iIzRBNjc0MSIvPjx0ZXh0IHg9IjkwIiB5PSIxMjAiIGZvbnQtc2l6ZT0iODAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcHBsZSBDb2xvciBFbW9qaSI+8J+NpTwvdGV4dD48L3N2Zz4=">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #F5EFE6;
+  color: #2D3D2A;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: contain;
+}
+
+#app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: calc(80px + env(safe-area-inset-bottom));
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.header {
+  padding: calc(env(safe-area-inset-top) + 16px) 20px 16px;
+  background: linear-gradient(180deg, #F5EFE6 70%, rgba(245,239,230,0.85) 100%);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+}
+
+.header h1 {
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 700;
+  font-size: 22px;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.header .date { font-size: 13px; color: #6B7A6B; margin-top: 4px; }
+
+.content { padding: 0 20px; }
+
+.ring-card {
+  background: #FFFCF7;
+  border-radius: 20px;
+  padding: 18px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(74, 103, 65, 0.08);
+  box-shadow: 0 1px 3px rgba(74, 103, 65, 0.04);
+}
+
+.ring-row { display: flex; align-items: center; gap: 14px; }
+.ring-info { flex: 1; min-width: 0; }
+
+.ring-label {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.ring-name { font-weight: 500; font-size: 15px; }
+
+.ring-value { font-family: 'Noto Serif TC', serif; font-size: 14px; color: #6B7A6B; }
+.ring-value strong { color: #2D3D2A; font-size: 17px; margin-right: 2px; }
+
+.progress-bar {
+  height: 8px; background: #EDE4D3; border-radius: 4px;
+  overflow: hidden; position: relative;
+}
+
+.progress-fill {
+  height: 100%; border-radius: 4px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-marker {
+  position: absolute; top: -2px; width: 2px; height: 12px;
+  background: rgba(45, 61, 42, 0.3); border-radius: 1px;
+}
+
+.quick-btns { display: flex; gap: 8px; margin-top: 10px; }
+
+.qbtn {
+  flex: 1; border: 1px solid rgba(74, 103, 65, 0.15);
+  background: #FFFCF7; color: #4A6741;
+  padding: 8px; border-radius: 10px;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  transition: all 0.15s; font-family: inherit;
+}
+.qbtn:active { background: #4A6741; color: #FFFCF7; transform: scale(0.97); }
+
+.num-input {
+  width: 100%; text-align: center;
+  border: 1px solid rgba(74, 103, 65, 0.2);
+  background: #FFFCF7; padding: 8px;
+  border-radius: 10px; font-size: 15px;
+  font-family: inherit; color: #2D3D2A;
+}
+.num-input:focus { outline: none; border-color: #4A6741; }
+
+.status-pill {
+  display: inline-block; font-size: 11px;
+  padding: 2px 8px; border-radius: 8px;
+  margin-left: 6px; font-weight: 500;
+}
+.status-under { background: #F5E5D5; color: #B07A3F; }
+.status-ok { background: #DFE8D6; color: #4A6741; }
+.status-over { background: #F5D5D5; color: #B04F4F; }
+
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%;
+  transform: translateX(-50%); width: 100%; max-width: 480px;
+  background: #FFFCF7;
+  border-top: 1px solid rgba(74, 103, 65, 0.1);
+  display: flex;
+  padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+  z-index: 20;
+}
+
+.nav-item {
+  flex: 1; background: none; border: none; padding: 8px 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  color: #8A998A; font-size: 11px; cursor: pointer;
+  font-family: inherit; transition: color 0.15s;
+}
+.nav-item.active { color: #4A6741; }
+.nav-icon { font-size: 20px; line-height: 1; }
+
+.section-title {
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 700; font-size: 16px;
+  margin: 20px 0 10px; color: #2D3D2A;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.action-card {
+  background: #FFFCF7; border-radius: 16px;
+  padding: 14px 16px; margin-bottom: 10px;
+  border: 1px solid rgba(74, 103, 65, 0.08);
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; transition: all 0.15s;
+}
+.action-card:active { transform: scale(0.98); background: #F5EFE6; }
+.action-card.selected { border: 2px solid #4A6741; background: #EDE4D3; }
+
+.primary-btn {
+  background: #4A6741; color: #FFFCF7; border: none;
+  padding: 12px 20px; border-radius: 12px;
+  font-size: 15px; font-weight: 500; cursor: pointer;
+  font-family: inherit; width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.primary-btn:active { background: #3A5233; }
+.primary-btn:disabled { background: #B5B5B5; }
+
+.secondary-btn {
+  background: #FFFCF7; color: #4A6741;
+  border: 1px solid #4A6741; padding: 10px 16px;
+  border-radius: 10px; font-size: 14px;
+  font-family: inherit; cursor: pointer;
+}
+
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(45, 61, 42, 0.4); z-index: 100;
+  display: flex; align-items: flex-end; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: #F5EFE6; width: 100%; max-width: 480px;
+  max-height: 90vh; border-radius: 24px 24px 0 0;
+  overflow-y: auto; padding: 24px 20px 32px;
+  animation: slideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 18px;
+}
+
+.modal-title {
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 700; font-size: 18px;
+}
+
+.icon-btn {
+  background: none; border: none; color: #6B7A6B;
+  cursor: pointer; padding: 6px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.icon-btn:active { background: rgba(74, 103, 65, 0.1); }
+
+.form-group { margin-bottom: 16px; }
+
+.form-label {
+  font-size: 13px; color: #6B7A6B;
+  margin-bottom: 6px; font-weight: 500;
+}
+
+.form-input {
+  width: 100%; border: 1px solid rgba(74, 103, 65, 0.2);
+  background: #FFFCF7; padding: 10px 12px;
+  border-radius: 10px; font-size: 15px;
+  font-family: inherit; color: #2D3D2A;
+}
+.form-input:focus { outline: none; border-color: #4A6741; }
+textarea.form-input { min-height: 80px; resize: vertical; }
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+
+.chip {
+  background: #FFFCF7;
+  border: 1px solid rgba(74, 103, 65, 0.15);
+  padding: 6px 12px; border-radius: 16px;
+  font-size: 13px; color: #4A6741;
+  cursor: pointer; font-family: inherit;
+}
+.chip.selected { background: #4A6741; color: #FFFCF7; border-color: #4A6741; }
+
+.goal-row {
+  background: #FFFCF7; border-radius: 14px;
+  padding: 14px; margin-bottom: 10px;
+  border: 1px solid rgba(74, 103, 65, 0.08);
+}
+
+.goal-row-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.goal-name { font-weight: 500; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+
+.toggle {
+  width: 40px; height: 22px;
+  background: #D5CFC4; border-radius: 11px;
+  position: relative; cursor: pointer;
+  transition: background 0.2s; flex-shrink: 0;
+}
+.toggle.on { background: #4A6741; }
+.toggle::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 18px; height: 18px; background: #FFFCF7;
+  border-radius: 50%; transition: transform 0.2s;
+}
+.toggle.on::after { transform: translateX(18px); }
+
+.range-row { display: flex; align-items: center; gap: 8px; }
+.range-row .form-input { flex: 1; padding: 8px; text-align: center; }
+.range-row span { color: #6B7A6B; font-size: 13px; }
+
+.note-item {
+  background: #FFFCF7; border-radius: 12px;
+  padding: 12px; margin-bottom: 8px;
+  border: 1px solid rgba(74, 103, 65, 0.08);
+}
+
+.note-time { font-size: 11px; color: #8A998A; margin-bottom: 4px; }
+.note-content { font-size: 14px; color: #2D3D2A; }
+
+.empty-state {
+  text-align: center; padding: 40px 20px;
+  color: #8A998A; font-size: 14px;
+}
+
+.history-row {
+  background: #FFFCF7; border-radius: 12px;
+  padding: 12px 14px; margin-bottom: 8px;
+  cursor: pointer; display: flex;
+  justify-content: space-between; align-items: center;
+  border: 1px solid rgba(74, 103, 65, 0.08);
+}
+
+.history-date { font-family: 'Noto Serif TC', serif; font-weight: 500; }
+
+.mini-bars { display: flex; gap: 3px; }
+
+.mini-bar {
+  width: 6px; height: 16px;
+  background: #EDE4D3; border-radius: 1px;
+  position: relative; overflow: hidden;
+}
+
+.mini-bar-fill { position: absolute; bottom: 0; left: 0; right: 0; }
+
+.photo-area {
+  border: 2px dashed rgba(74, 103, 65, 0.3);
+  border-radius: 14px; padding: 30px 20px;
+  text-align: center; color: #6B7A6B;
+  margin-bottom: 16px; cursor: pointer;
+}
+
+.photo-preview {
+  width: 100%; max-height: 240px;
+  object-fit: cover; border-radius: 14px;
+  margin-bottom: 12px;
+}
+
+.analysis-result {
+  background: #FFFCF7; border-radius: 14px;
+  padding: 14px; margin-bottom: 12px;
+  border: 1px solid rgba(74, 103, 65, 0.1);
+}
+
+.food-item {
+  background: #FFFCF7; border-radius: 12px;
+  padding: 12px; margin-bottom: 8px;
+  border: 1px solid rgba(74, 103, 65, 0.08);
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+.food-info { flex: 1; }
+.food-name { font-weight: 500; color: #2D3D2A; }
+.food-meta { font-size: 12px; color: #6B7A6B; margin-top: 2px; }
+.food-actions { display: flex; gap: 6px; }
+
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(74, 103, 65, 0.2);
+  border-top-color: #4A6741; border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.chart-container {
+  width: 100%; height: 200px;
+  position: relative;
+}
+
+.chart-svg { width: 100%; height: 100%; }
+
+.chart-line { fill: none; stroke: #4A6741; stroke-width: 2; }
+.chart-dot { fill: #4A6741; }
+.chart-grid { stroke: #EDE4D3; stroke-dasharray: 3 3; }
+.chart-axis { fill: #8A998A; font-size: 10px; font-family: 'Noto Sans TC', sans-serif; }
+
+.api-banner {
+  background: #FFF3E0; border: 1px solid #B07A3F;
+  color: #8B5A2B; padding: 10px 12px;
+  border-radius: 10px; font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.install-prompt {
+  background: #DFE8D6; border: 1px solid #4A6741;
+  color: #2D3D2A; padding: 12px 14px;
+  border-radius: 12px; font-size: 13px;
+  margin: 12px 20px; display: flex;
+  justify-content: space-between; align-items: center;
+  gap: 10px;
+}
+
+.install-prompt button {
+  background: #4A6741; color: #FFFCF7;
+  border: none; padding: 6px 12px;
+  border-radius: 8px; font-size: 12px;
+  cursor: pointer; font-family: inherit;
+  flex-shrink: 0;
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// ============ 元素定義 ============
+const ELEMENTS = [
+  { key: "protein", label: "蛋白質", emoji: "🥩", color: "#C97064" },
+  { key: "staple", label: "主食", emoji: "🍚", color: "#D4A574" },
+  { key: "veg", label: "蔬菜", emoji: "🥬", color: "#7A9471" },
+  { key: "fruit", label: "水果", emoji: "🍎", color: "#D97A8C" },
+  { key: "dairy", label: "奶製品", emoji: "🥛", color: "#A8B5C4" },
+  { key: "fat", label: "油脂", emoji: "🥑", color: "#B89968", optional: true },
+  { key: "water", label: "水", emoji: "💧", color: "#6B95B8", unit: "ml", isWater: true },
+  { key: "other", label: "其他", emoji: "💊", color: "#9B8AA6" },
+];
+
+const DEFAULT_GOALS = {
+  protein: { min: 5, max: 6, enabled: true },
+  staple: { min: 7, max: 9, enabled: true },
+  veg: { min: 4, max: 5, enabled: true },
+  fruit: { min: 1, max: 2, enabled: true },
+  dairy: { min: 1, max: 2, enabled: true },
+  fat: { min: 3, max: 5, enabled: false },
+  water: { min: 2000, max: 2500, enabled: true },
+  other: { min: 0, max: 0, enabled: true },
+};
+
+// ============ 預設食物資料庫 ============
+const DEFAULT_FOODS = [
+  // ============ 主食類（PDF）============
+  { name: "白飯", amount: "1/4 碗 (40g)", contributions: { staple: 1 }, category: "主食" },
+  { name: "白飯", amount: "半碗 (80g)", contributions: { staple: 2 }, category: "主食" },
+  { name: "白飯", amount: "一碗 (160g)", contributions: { staple: 4 }, category: "主食" },
+  { name: "稀飯", amount: "半碗 (125g)", contributions: { staple: 1 }, category: "主食" },
+  { name: "麵條（熟）", amount: "半碗 (60g)", contributions: { staple: 1 }, category: "主食" },
+  { name: "米粉（熟）", amount: "半碗 (30-50g)", contributions: { staple: 1 }, category: "主食" },
+  { name: "冬粉（熟）", amount: "半碗 (70g)", contributions: { staple: 1 }, category: "主食" },
+  { name: "義大利麵（熟）", amount: "半碗 (50g)", contributions: { staple: 1 }, category: "主食" },
+  { name: "吐司", amount: "1 片 (30g)", contributions: { staple: 1 }, category: "主食" },
+  { name: "鮮奶吐司", amount: "1 片 (60g)", contributions: { staple: 2 }, category: "主食" },
+  { name: "山東大饅頭", amount: "1 顆 (180g)", contributions: { staple: 6 }, category: "主食" },
+  { name: "冷凍饅頭", amount: "1 顆 (90g)", contributions: { staple: 3 }, category: "主食" },
+  { name: "早餐店饅頭", amount: "1 顆 (120g)", contributions: { staple: 4 }, category: "主食" },
+  { name: "燒餅", amount: "1 個 (80g)", contributions: { staple: 4 }, category: "主食" },
+  { name: "蘿蔔糕", amount: "200g", contributions: { staple: 4 }, category: "主食" },
+  { name: "水餃皮", amount: "3 顆份", contributions: { staple: 1 }, category: "主食" },
+  { name: "地瓜", amount: "半碗 (55g)", contributions: { staple: 1 }, category: "主食" },
+  { name: "芋頭", amount: "半碗 (55g)", contributions: { staple: 1 }, category: "主食" },
+  { name: "玉米", amount: "6-7cm (85g)", contributions: { staple: 1 }, category: "主食" },
+  { name: "蓮藕", amount: "2/3 碗 (120g)", contributions: { staple: 1 }, category: "主食" },
+  { name: "菱角", amount: "10 顆", contributions: { staple: 1 }, category: "主食" },
+  { name: "燕麥片（乾）", amount: "3 湯匙 (20g)", contributions: { staple: 1 }, category: "主食" },
+  { name: "五穀粉", amount: "2 湯匙 (20g)", contributions: { staple: 1 }, category: "主食" },
+  { name: "薏仁粉", amount: "5 湯匙 (20g)", contributions: { staple: 1 }, category: "主食" },
+  { name: "麥片（熟）", amount: "1 碗 (80g)", contributions: { staple: 4 }, category: "主食" },
+
+  // ============ 蔬菜類（PDF）============
+  { name: "高麗菜", amount: "1 碗 (100g)", contributions: { veg: 1 }, category: "蔬菜" },
+  { name: "地瓜葉", amount: "1 碗 (100g)", contributions: { veg: 1 }, category: "蔬菜" },
+  { name: "小白菜", amount: "1 碗 (100g)", contributions: { veg: 1 }, category: "蔬菜" },
+  { name: "油菜", amount: "1 碗 (100g)", contributions: { veg: 1 }, category: "蔬菜" },
+  { name: "香菇", amount: "1 碗 (100g)", contributions: { veg: 1 }, category: "蔬菜" },
+  { name: "金針菇", amount: "1 碗 (100g)", contributions: { veg: 1 }, category: "蔬菜" },
+  { name: "竹筍", amount: "1 碗 (100g)", contributions: { veg: 1 }, category: "蔬菜" },
+  { name: "大番茄", amount: "1 碗 (100g)", contributions: { veg: 1 }, category: "蔬菜" },
+
+  // ============ 水果類（PDF, 1份60大卡）============
+  { name: "小番茄", amount: "20 顆 (220g)", contributions: { fruit: 1 }, category: "水果" },
+  { name: "葡萄", amount: "13 顆 (85g)", contributions: { fruit: 1 }, category: "水果" },
+  { name: "香蕉", amount: "半根 (70g)", contributions: { fruit: 1 }, category: "水果" },
+  { name: "芭樂", amount: "155g", contributions: { fruit: 1 }, category: "水果" },
+  { name: "小蘋果", amount: "1 顆", contributions: { fruit: 1 }, category: "水果" },
+  { name: "芒果", amount: "150g", contributions: { fruit: 1 }, category: "水果" },
+  { name: "西瓜", amount: "180g", contributions: { fruit: 1 }, category: "水果" },
+  { name: "鳳梨", amount: "110g", contributions: { fruit: 1 }, category: "水果" },
+
+  // ============ 豆魚蛋肉類（PDF, 1份75大卡）============
+  { name: "豬里肌肉片", amount: "1 片 (1cm厚, 90g)", contributions: { protein: 3 }, category: "蛋白質" },
+  { name: "L 型雞腿", amount: "1 隻 (120g)", contributions: { protein: 4 }, category: "蛋白質" },
+  { name: "棒腿", amount: "1 隻 (60g)", contributions: { protein: 2 }, category: "蛋白質" },
+  { name: "小棒腿/雞手臂", amount: "1 隻", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "雞翅", amount: "1 隻", contributions: { protein: 0.5 }, category: "蛋白質" },
+  { name: "虱目魚（去頭）", amount: "1 條 (90g)", contributions: { protein: 3 }, category: "蛋白質" },
+  { name: "旗魚（生）", amount: "35g (熟30g)", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "白蝦", amount: "3 隻 (撥殼30g)", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "小卷", amount: "生35g / 熟30g", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "牡蠣", amount: "10 顆", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "文蛤", amount: "25 隻", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "雞蛋", amount: "1 顆", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "炒蛋", amount: "半碗", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "肉燥", amount: "2 匙", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "肉鬆", amount: "3 匙", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "吻仔魚", amount: "5 匙", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "豆包", amount: "1/2 片 (30g)", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "小方豆乾", amount: "1 片 (40g)", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "傳統豆腐", amount: "兩小方格 (80g)", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "嫩豆腐", amount: "半盒 (140g)", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "無糖豆漿", amount: "200ml", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "五香豆乾", amount: "1/3 塊", contributions: { protein: 1 }, category: "蛋白質" },
+  { name: "三角油豆腐", amount: "55g", contributions: { protein: 1, fat: 1 }, category: "蛋白質" },
+  { name: "百頁豆腐", amount: "70g", contributions: { protein: 1, fat: 1 }, category: "蛋白質" },
+  { name: "毛豆", amount: "45 顆/15 根莢", contributions: { protein: 1 }, category: "蛋白質" },
+
+  // ============ 乳品類（PDF, 1份120大卡低脂/150大卡全脂）============
+  { name: "低脂牛奶", amount: "240ml", contributions: { dairy: 1 }, category: "奶製品" },
+  { name: "全脂牛奶", amount: "240ml", contributions: { dairy: 1 }, category: "奶製品" },
+  { name: "低脂奶粉", amount: "3 匙", contributions: { dairy: 1 }, category: "奶製品" },
+  { name: "全脂奶粉", amount: "4 匙", contributions: { dairy: 1 }, category: "奶製品" },
+  { name: "低脂起司", amount: "2 片 (45g)", contributions: { dairy: 1 }, category: "奶製品" },
+  { name: "起司絲", amount: "35g", contributions: { dairy: 1 }, category: "奶製品" },
+  { name: "無糖優酪乳", amount: "240ml", contributions: { dairy: 1 }, category: "奶製品" },
+  { name: "優格", amount: "200g (約 2/3 碗)", contributions: { dairy: 1 }, category: "奶製品" },
+
+  // ============ 油脂及堅果類（PDF, 1份45大卡）============
+  { name: "植物/豬油", amount: "1/3 匙 (5g)", contributions: { fat: 1 }, category: "油脂" },
+  { name: "美乃滋", amount: "半匙", contributions: { fat: 1 }, category: "油脂" },
+  { name: "杏仁", amount: "5 粒", contributions: { fat: 1 }, category: "油脂" },
+  { name: "核桃", amount: "2 粒", contributions: { fat: 1 }, category: "油脂" },
+  { name: "腰果", amount: "5 粒", contributions: { fat: 1 }, category: "油脂" },
+  { name: "南瓜子", amount: "30 粒", contributions: { fat: 1 }, category: "油脂" },
+  { name: "開心果", amount: "15 粒", contributions: { fat: 1 }, category: "油脂" },
+  { name: "花生仁", amount: "10 粒", contributions: { fat: 1 }, category: "油脂" },
+
+  // ============ 7-11 早餐系列（估算）============
+  { name: "[7-11] 吉士豬肉堡加蛋", amount: "1 個", contributions: { staple: 2, protein: 2, fat: 1 }, category: "7-11 早餐", isEstimate: true },
+  { name: "[7-11] 吉士火腿蛋堡", amount: "1 個", contributions: { staple: 2, protein: 1.5, fat: 1 }, category: "7-11 早餐", isEstimate: true },
+  { name: "[7-11] 晶華嫩雞鮮蔬貝果", amount: "1 個", contributions: { staple: 3, protein: 2, veg: 0.5 }, category: "7-11 早餐", isEstimate: true },
+  { name: "[7-11] 溏心蛋紐奧良風味烤雞三明治", amount: "1 份", contributions: { staple: 2, protein: 2, fat: 1 }, category: "7-11 早餐", isEstimate: true },
+  { name: "[7-11] 醬燒里肌鮮蔬三明治", amount: "1 份", contributions: { staple: 2, protein: 1.5, veg: 0.5 }, category: "7-11 早餐", isEstimate: true },
+  { name: "[7-11] 燻雞菇菇彩蔬三明治", amount: "1 份", contributions: { staple: 2, protein: 1.5, veg: 0.5 }, category: "7-11 早餐", isEstimate: true },
+  { name: "[7-11] 燻雞總匯鮮蔬三明治", amount: "1 份", contributions: { staple: 2, protein: 2, veg: 0.5 }, category: "7-11 早餐", isEstimate: true },
+  { name: "[7-11] 紐奧良風味烤雞熱壓土司", amount: "1 份", contributions: { staple: 2, protein: 2, fat: 1 }, category: "7-11 早餐", isEstimate: true },
+  { name: "[7-11] 里肌肉蛋熱壓土司", amount: "1 份", contributions: { staple: 2, protein: 2, fat: 0.5 }, category: "7-11 早餐", isEstimate: true },
+
+  // ============ 7-11 飯糰系列（估算，飯糰主食約 2.5 份）============
+  { name: "[7-11] 蔥鹽生鮭飯糰", amount: "1 個", contributions: { staple: 2.5, protein: 1.5 }, category: "7-11 飯糰", isEstimate: true },
+  { name: "[7-11] 炙烤鹽蔥燒肉飯糰", amount: "1 個", contributions: { staple: 2.5, protein: 1.5, fat: 0.5 }, category: "7-11 飯糰", isEstimate: true },
+  { name: "[7-11] 炭火燒肉飯糰", amount: "1 個", contributions: { staple: 2.5, protein: 1.5, fat: 0.5 }, category: "7-11 飯糰", isEstimate: true },
+  { name: "[7-11] 胡同炭火厚切牛小排飯糰", amount: "1 個", contributions: { staple: 2.5, protein: 2, fat: 1 }, category: "7-11 飯糰", isEstimate: true },
+  { name: "[7-11] 林聰明雞肉飯飯糰", amount: "1 個", contributions: { staple: 2.5, protein: 1.5 }, category: "7-11 飯糰", isEstimate: true },
+  { name: "[7-11] 韓式燒肉泡菜飯糰", amount: "1 個", contributions: { staple: 2.5, protein: 1.5, fat: 0.5 }, category: "7-11 飯糰", isEstimate: true },
+  { name: "[7-11] 石安牧場溏心蛋飯糰", amount: "1 個", contributions: { staple: 2.5, protein: 1.5 }, category: "7-11 飯糰", isEstimate: true },
+  { name: "[7-11] 炙燒明太子鮭魚飯糰", amount: "1 個", contributions: { staple: 2.5, protein: 1.5 }, category: "7-11 飯糰", isEstimate: true },
+  { name: "[7-11] 鮭魚鮭魚卵飯糰", amount: "1 個", contributions: { staple: 2.5, protein: 1.5 }, category: "7-11 飯糰", isEstimate: true },
+  { name: "[7-11] 蛋白力量飯卷-紐奧良烤雞", amount: "1 卷", contributions: { staple: 2, protein: 2.5 }, category: "7-11 飯糰", isEstimate: true },
+  { name: "[7-11] 帕泰家-沙嗲雞肉烤飯糰", amount: "1 個", contributions: { staple: 2.5, protein: 1.5, fat: 0.5 }, category: "7-11 飯糰", isEstimate: true },
+  { name: "[7-11] 握便當-黑胡椒烤雞", amount: "1 份", contributions: { staple: 3, protein: 2.5 }, category: "7-11 飯糰", isEstimate: true },
+
+  // ============ 7-11 正餐（估算）============
+  { name: "[7-11] 馨苑干貝海鮮煲粥", amount: "1 份", contributions: { staple: 3, protein: 2, veg: 0.5 }, category: "7-11 正餐", isEstimate: true },
+  { name: "[7-11] 頌丹樂泰式烤雞冷麵", amount: "1 份", contributions: { staple: 3, protein: 3, veg: 1 }, category: "7-11 正餐", isEstimate: true },
+  { name: "[7-11] 心潮飯店醬燒豬肉飯", amount: "1 份", contributions: { staple: 4, protein: 3, veg: 1, fat: 1 }, category: "7-11 正餐", isEstimate: true },
+  { name: "[7-11] 月見醬油冷烏龍麵", amount: "1 份", contributions: { staple: 3, protein: 1.5 }, category: "7-11 正餐", isEstimate: true },
+  { name: "[7-11] 越式酸辣雞絲冷麵", amount: "1 份", contributions: { staple: 3, protein: 2.5, veg: 1 }, category: "7-11 正餐", isEstimate: true },
+  { name: "[7-11] 可口紅燒牛肉麵", amount: "1 份", contributions: { staple: 4, protein: 3, veg: 0.5, fat: 1 }, category: "7-11 正餐", isEstimate: true },
+  { name: "[7-11] 滿漢大餐酸菜牛肉拌麵", amount: "1 份", contributions: { staple: 4, protein: 3, veg: 0.5, fat: 1 }, category: "7-11 正餐", isEstimate: true },
+  { name: "[7-11] 香蒜烤雞胸鮮蔬餐盒", amount: "1 份", contributions: { staple: 2, protein: 4, veg: 1.5 }, category: "7-11 正餐", isEstimate: true },
+  { name: "[7-11] 極饗林聰明雞肉飯", amount: "1 份", contributions: { staple: 4, protein: 3, veg: 0.5 }, category: "7-11 正餐", isEstimate: true },
+  { name: "[7-11] 碧玉鮮蝦餃", amount: "1 包", contributions: { staple: 2, protein: 2 }, category: "7-11 正餐", isEstimate: true },
+
+  // ============ 7-11 沙拉（有肉有菜）（估算）============
+  { name: "[7-11] 帕泰家泰式海鮮青木瓜沙拉", amount: "1 份", contributions: { protein: 2, veg: 2 }, category: "7-11 沙拉", isEstimate: true },
+  { name: "[7-11] 拿脆滋輕焙穀物雞肉麵沙拉", amount: "1 份", contributions: { staple: 1.5, protein: 3, veg: 1.5, fat: 0.5 }, category: "7-11 沙拉", isEstimate: true },
+  { name: "[7-11] 蔥鹽手撕雞沙拉", amount: "1 份", contributions: { protein: 3, veg: 2 }, category: "7-11 沙拉", isEstimate: true },
+  { name: "[7-11] 和風生鮭繽紛時蔬沙拉餐", amount: "1 份", contributions: { staple: 1, protein: 3, veg: 2 }, category: "7-11 沙拉", isEstimate: true },
+  { name: "[7-11] 烤雞纖穀時蔬沙拉餐", amount: "1 份", contributions: { staple: 1.5, protein: 3, veg: 2 }, category: "7-11 沙拉", isEstimate: true },
+  { name: "[7-11] 櫛瓜溏心蛋時蔬沙拉餐", amount: "1 份", contributions: { protein: 3, veg: 2, fat: 0.5 }, category: "7-11 沙拉", isEstimate: true },
+  { name: "[7-11] 糯麥菇菇雞湯沙拉", amount: "1 份", contributions: { staple: 1.5, protein: 3, veg: 1.5 }, category: "7-11 沙拉", isEstimate: true },
+  { name: "[7-11] 地瓜雞胸肉沙拉", amount: "1 份", contributions: { staple: 1.5, protein: 3, veg: 1.5 }, category: "7-11 沙拉", isEstimate: true },
+  { name: "[7-11] 21 Plus 義式烤雞堅果沙拉", amount: "1 份", contributions: { protein: 3, veg: 2, fat: 1 }, category: "7-11 沙拉", isEstimate: true },
+  { name: "[7-11] 芝麻葉海鮮佐義式油醋沙拉", amount: "1 份", contributions: { protein: 3, veg: 2 }, category: "7-11 沙拉", isEstimate: true },
+  { name: "[7-11] 鮮嫩鴨胸佐無花果沙拉", amount: "1 份", contributions: { protein: 3, veg: 2, fat: 1 }, category: "7-11 沙拉", isEstimate: true },
+  { name: "[7-11] 義式烤番茄雞胸時蔬沙拉餐", amount: "1 份", contributions: { staple: 1, protein: 3, veg: 2 }, category: "7-11 沙拉", isEstimate: true },
+  { name: "[7-11] 法式烤雞佐時蔬", amount: "1 份", contributions: { protein: 3, veg: 2, fat: 0.5 }, category: "7-11 沙拉", isEstimate: true },
+  { name: "[7-11] 煙燻鮭魚帆立貝沙拉", amount: "1 份", contributions: { protein: 3, veg: 2 }, category: "7-11 沙拉", isEstimate: true },
+
+  // ============ 7-11 純蔬菜（估算）============
+  { name: "[7-11] 一日野菜-海藻沙拉", amount: "1 份", contributions: { veg: 2 }, category: "7-11 蔬菜", isEstimate: true },
+  { name: "[7-11] 一日野菜-活力彩蔬", amount: "1 份", contributions: { veg: 2 }, category: "7-11 蔬菜", isEstimate: true },
+  { name: "[7-11] 如記真空玉米筍", amount: "1 包", contributions: { veg: 1 }, category: "7-11 蔬菜", isEstimate: true },
+  { name: "[7-11] 如記真空綠竹筍", amount: "1 包", contributions: { veg: 1 }, category: "7-11 蔬菜", isEstimate: true },
+
+  // ============ 7-11 補蛋白質（估算）============
+  { name: "[7-11] 御料小館 21Plus 美式烤雞腿", amount: "1 隻", contributions: { protein: 3, fat: 1 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 爆炒滷雞胗", amount: "1 包", contributions: { protein: 3 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 石安牧場香滷蛋白丁", amount: "1 包", contributions: { protein: 2 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 山內雞肉油雞腿排", amount: "1 包", contributions: { protein: 3, fat: 1 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 山內雞肉雞汁香筍", amount: "1 包", contributions: { protein: 2, veg: 1 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 卜蜂蒸蛋湯", amount: "1 份", contributions: { protein: 1.5 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 滷鼎記麻辣雞胗", amount: "1 包", contributions: { protein: 3 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 滷鼎記香辣雞胗", amount: "1 包", contributions: { protein: 3 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 馨苑薑絲鱸魚湯", amount: "1 份", contributions: { protein: 3 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 滷鼎記香滷鵪鶉蛋", amount: "1 包", contributions: { protein: 1.5 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 21Plus 秘製炭火雞肉串", amount: "1 串", contributions: { protein: 2 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 鱈魚蛋白棒-起司風味", amount: "1 根", contributions: { protein: 1.5 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 永心鳳茶剝皮辣椒燉雞盅", amount: "1 份", contributions: { protein: 3 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 膳馨原盅厚菇燉雞湯", amount: "1 份", contributions: { protein: 3, veg: 0.5 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 石安牧場剝皮辣椒茶碗蒸", amount: "1 份", contributions: { protein: 1.5 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 石安牧場蔬食茶碗蒸", amount: "1 份", contributions: { protein: 1.5, veg: 0.5 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 台畜煙燻豬肝 100g", amount: "100g", contributions: { protein: 3 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 厚燒玉子", amount: "1 盒", contributions: { protein: 2 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] Seasons 法式香草烤雞翅", amount: "1 包", contributions: { protein: 2, fat: 1 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] MyProtein 蛋白飲", amount: "200ml", contributions: { protein: 2 }, category: "7-11 蛋白", isEstimate: true },
+  { name: "[7-11] 日式半熟蛋", amount: "1 顆", contributions: { protein: 1 }, category: "7-11 蛋白", isEstimate: true },
+];
+
+const todayKey = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+const formatDate = (key) => {
+  const [, m, d] = key.split("-");
+  return `${m}/${d}`;
+};
+
+const nowTime = () => new Date().toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" });
+
+// ============ 儲存（localStorage）============
+const store = {
+  get: (k) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { console.error(e); } },
+  del: (k) => localStorage.removeItem(k),
+  keys: (prefix) => Object.keys(localStorage).filter(k => k.startsWith(prefix)),
+};
+
+// ============ 建議值計算 ============
+function calcSuggestion(bmr, activityFactor, goalType) {
+  const tdee = bmr * activityFactor;
+  const targets = {
+    "cut-fast": tdee - 500, "cut-mid": tdee - 350, "cut-slow": tdee - 200,
+    "maintain": tdee,
+    "gain-slow": tdee + 200, "gain-mid": tdee + 350, "gain-fast": tdee + 500,
+  };
+  const cal = targets[goalType] || tdee;
+  let proteinRatio = 0.20;
+  if (goalType.startsWith("cut")) proteinRatio = 0.30;
+  else if (goalType.startsWith("gain")) proteinRatio = 0.25;
+  const proteinKcal = cal * proteinRatio;
+  const proteinServings = Math.round(proteinKcal / 75);
+  const vegKcal = 5 * 25;
+  const fruitKcal = 1.5 * 60;
+  const dairyKcal = 1.5 * 120;
+  const fatRatio = 0.25;
+  const fatKcal = cal * fatRatio;
+  const fatServings = Math.round(fatKcal / 45);
+  const stapleKcal = Math.max(cal - proteinKcal - vegKcal - fruitKcal - dairyKcal - fatKcal, cal * 0.3);
+  const stapleServings = Math.round(stapleKcal / 70);
+  return {
+    protein: { min: Math.max(proteinServings - 1, 3), max: proteinServings + 1, enabled: true },
+    staple: { min: Math.max(stapleServings - 1, 3), max: stapleServings + 1, enabled: true },
+    veg: { min: 4, max: 6, enabled: true },
+    fruit: { min: 1, max: 2, enabled: true },
+    dairy: { min: 1, max: 2, enabled: true },
+    fat: { min: Math.max(fatServings - 1, 2), max: fatServings + 1, enabled: false },
+    water: { min: 2000, max: 2500, enabled: true },
+    other: { min: 0, max: 0, enabled: true },
+    _meta: { tdee: Math.round(tdee), targetCal: Math.round(cal), goalType }
+  };
+}
+
+// ============ 狀態 ============
+const state = {
+  tab: "today",
+  goals: store.get("goals") || DEFAULT_GOALS,
+  foods: store.get("foods") || [],
+  apiKey: store.get("apiKey") || "",
+  currentDate: todayKey(),
+  data: null,
+  modal: null,
+  showInstall: !window.matchMedia('(display-mode: standalone)').matches && !localStorage.getItem("installDismissed"),
+};
+
+function loadDay(key) {
+  state.currentDate = key;
+  const d = store.get(`day:${key}`);
+  state.data = d || {
+    servings: { protein: 0, staple: 0, veg: 0, fruit: 0, dairy: 0, fat: 0, water: 0, other: 0 },
+    notes: [], weight: null, body: [], exercise: [],
+  };
+}
+
+function saveDay() {
+  store.set(`day:${state.currentDate}`, state.data);
+}
+
+loadDay(todayKey());
+
+// ============ 渲染輔助 ============
+function h(tag, attrs = {}, children = []) {
+  const el = document.createElement(tag);
+  Object.entries(attrs).forEach(([k, v]) => {
+    if (k === "class") el.className = v;
+    else if (k === "style" && typeof v === "object") Object.assign(el.style, v);
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === "html") el.innerHTML = v;
+    else if (v !== null && v !== undefined && v !== false) el.setAttribute(k, v);
+  });
+  (Array.isArray(children) ? children : [children]).forEach(c => {
+    if (c == null || c === false) return;
+    el.appendChild(typeof c === "string" || typeof c === "number" ? document.createTextNode(String(c)) : c);
+  });
+  return el;
+}
+
+function render() {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  // 頂部 header
+  const header = h("header", { class: "header" }, [
+    h("h1", {}, "飲控筆記"),
+    h("div", { class: "date" }, (state.currentDate === todayKey() ? "今天 · " : "") + state.currentDate),
+  ]);
+  app.appendChild(header);
+
+  // 安裝提示
+  if (state.showInstall) {
+    app.appendChild(renderInstallPrompt());
+  }
+
+  const content = h("main", { class: "content" });
+  if (state.tab === "today") renderToday(content);
+  else if (state.tab === "log") renderLog(content);
+  else if (state.tab === "history") renderHistory(content);
+  else if (state.tab === "foods") renderFoods(content);
+  else if (state.tab === "settings") renderSettings(content);
+  app.appendChild(content);
+
+  app.appendChild(renderNav());
+
+  if (state.modal) {
+    app.appendChild(state.modal());
+  }
+}
+
+function renderInstallPrompt() {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const text = isIOS
+    ? "點下方分享 → 加入主畫面，把這個 app 釘到桌面"
+    : "可以加入主畫面，方便快速開啟";
+  return h("div", { class: "install-prompt" }, [
+    h("span", {}, "📱 " + text),
+    h("button", {
+      onclick: () => {
+        localStorage.setItem("installDismissed", "1");
+        state.showInstall = false;
+        render();
+      }
+    }, "知道了")
+  ]);
+}
+
+function renderNav() {
+  const items = [
+    { k: "today", icon: "📅", label: "今日" },
+    { k: "log", icon: "📝", label: "記錄" },
+    { k: "history", icon: "📊", label: "歷史" },
+    { k: "foods", icon: "🗂", label: "食物庫" },
+    { k: "settings", icon: "⚙️", label: "設定" },
+  ];
+  return h("nav", { class: "bottom-nav" },
+    items.map(it => h("button", {
+      class: "nav-item" + (state.tab === it.k ? " active" : ""),
+      onclick: () => { state.tab = it.k; render(); }
+    }, [
+      h("div", { class: "nav-icon" }, it.icon),
+      h("span", {}, it.label),
+    ]))
+  );
+}
+
+// ============ 今日視圖 ============
+function renderToday(parent) {
+  if (state.currentDate !== todayKey()) {
+    parent.appendChild(h("button", {
+      class: "secondary-btn",
+      style: { marginBottom: "12px", display: "flex", alignItems: "center", gap: "4px" },
+      onclick: () => { loadDay(todayKey()); render(); }
+    }, "← 回到今天"));
+  }
+
+  ELEMENTS.filter(e => state.goals[e.key]?.enabled !== false).forEach(el => {
+    const goal = state.goals[el.key] || { min: 0, max: 0 };
+    const current = state.data.servings[el.key] || 0;
+    const status = current < goal.min ? "under" : current > goal.max ? "over" : "ok";
+    const isW = el.isWater;
+    const fmt = (n) => isW ? Math.round(n) : (Math.round(n * 10) / 10);
+    const statusText = status === "under" ? `還差 ${fmt(goal.min - current)}` :
+      status === "over" ? `超過 ${fmt(current - goal.max)}` : "已達標";
+    const pct = goal.max > 0 ? Math.min((current / goal.max) * 100, 110) : 0;
+    const minPct = goal.max > 0 ? (goal.min / goal.max) * 100 : 0;
+
+    const adjust = (delta) => {
+      const cur = state.data.servings[el.key] || 0;
+      state.data.servings[el.key] = isW
+        ? Math.max(0, Math.round(cur + delta))
+        : Math.max(0, +(cur + delta).toFixed(1));
+      saveDay(); render();
+    };
+
+    const setVal = (val) => {
+      const p = parseFloat(val) || 0;
+      state.data.servings[el.key] = isW ? Math.max(0, Math.round(p)) : Math.max(0, p);
+      saveDay(); render();
+    };
+
+    const card = h("div", { class: "ring-card" }, [
+      h("div", { class: "ring-row" }, [
+        h("div", { style: { fontSize: "28px" } }, el.emoji),
+        h("div", { class: "ring-info" }, [
+          h("div", { class: "ring-label" }, [
+            h("div", {}, [
+              h("span", { class: "ring-name" }, el.label),
+              h("span", { class: `status-pill status-${status}` }, statusText),
+            ]),
+            h("div", { class: "ring-value" }, [
+              h("strong", {}, String(fmt(current))),
+              " " + (el.unit || "份") + " / " + (goal.min === goal.max ? goal.min : `${goal.min}-${goal.max}`)
+            ]),
+          ]),
+          h("div", { class: "progress-bar" }, [
+            h("div", {
+              class: "progress-fill",
+              style: { width: Math.min(pct, 100) + "%", background: status === "over" ? "#B04F4F" : el.color }
+            }),
+            minPct > 0 && minPct < 100 ? h("div", { class: "progress-marker", style: { left: minPct + "%" } }) : null
+          ]),
+        ]),
+      ]),
+      h("div", { class: "quick-btns" },
+        isW ? [
+          h("button", { class: "qbtn", onclick: () => adjust(250) }, "+ 250"),
+          h("button", { class: "qbtn", onclick: () => adjust(500) }, "+ 500"),
+          h("button", { class: "qbtn", onclick: () => adjust(-250) }, "− 250"),
+          h("input", {
+            class: "num-input", type: "number", step: "50",
+            value: fmt(current),
+            style: { flex: "1.5" },
+            oninput: (e) => setVal(e.target.value),
+          })
+        ] : [
+          h("button", { class: "qbtn", onclick: () => adjust(-0.5) }, "− 0.5"),
+          h("button", { class: "qbtn", onclick: () => adjust(1) }, "+ 1"),
+          h("input", {
+            class: "num-input", type: "number", step: "0.1",
+            value: fmt(current),
+            style: { flex: "1.5" },
+            oninput: (e) => setVal(e.target.value),
+          })
+        ]
+      )
+    ]);
+    parent.appendChild(card);
+  });
+
+  parent.appendChild(h("div", { class: "section-title", style: { marginTop: "24px" } }, "📷 快速新增"));
+
+  parent.appendChild(h("div", {
+    class: "action-card",
+    onclick: () => openPhotoModal()
+  }, [
+    h("div", { style: { display: "flex", alignItems: "center", gap: "12px" } }, [
+      h("div", { style: { fontSize: "20px" } }, "📷"),
+      h("div", {}, [
+        h("div", { style: { fontWeight: "500" } }, "拍照分析"),
+        h("div", { style: { fontSize: "12px", color: "#6B7A6B" } },
+          state.apiKey ? "AI 估算份量" : "需先到設定填 API 金鑰"),
+      ])
+    ]),
+    h("span", { style: { color: "#8A998A" } }, "›")
+  ]));
+
+  parent.appendChild(h("div", {
+    class: "action-card",
+    onclick: () => openFoodPicker()
+  }, [
+    h("div", { style: { display: "flex", alignItems: "center", gap: "12px" } }, [
+      h("div", { style: { fontSize: "20px" } }, "🗂"),
+      h("div", {}, [
+        h("div", { style: { fontWeight: "500" } }, "從食物庫加入"),
+        h("div", { style: { fontSize: "12px", color: "#6B7A6B" } }, `${state.foods.length} 樣食物`),
+      ])
+    ]),
+    h("span", { style: { color: "#8A998A" } }, "›")
+  ]));
+}
+
+// ============ 記錄視圖 ============
+function renderLog(parent) {
+  const BODY_TAGS = ["生理期", "頭暈", "精神好", "疲倦", "便秘", "腹瀉", "脹氣", "頭痛", "睡眠差", "心情低"];
+  const EX_TYPES = ["Zumba", "BodyPump", "BodyAttack", "重訓", "瑜伽", "有氧", "走路", "其他"];
+
+  let noteText = "", weightInput = state.data.weight || "", bodyTags = [], bodyNote = "";
+  let exType = "", exDuration = "", exNote = "";
+
+  // 飲食筆記
+  parent.appendChild(h("div", { class: "section-title" }, "🍽 飲食筆記"));
+  const noteArea = h("textarea", {
+    class: "form-input",
+    placeholder: "吃了什麼？例如：午餐有雞胸肉、糙米飯、青菜...",
+    style: { marginBottom: "8px" },
+    oninput: (e) => { noteText = e.target.value; }
+  });
+  parent.appendChild(h("div", { class: "ring-card" }, [
+    noteArea,
+    h("button", {
+      class: "primary-btn",
+      onclick: () => {
+        if (!noteText.trim()) return;
+        state.data.notes = state.data.notes || [];
+        state.data.notes.push({ time: nowTime(), text: noteText.trim() });
+        saveDay(); render();
+      }
+    }, "+ 新增筆記")
+  ]));
+
+  if (state.data.notes?.length) {
+    state.data.notes.forEach((n, i) => {
+      parent.appendChild(h("div", { class: "note-item" }, [
+        h("div", { style: { display: "flex", justifyContent: "space-between" } }, [
+          h("div", { class: "note-time" }, n.time),
+          h("button", {
+            class: "icon-btn",
+            onclick: () => { state.data.notes.splice(i, 1); saveDay(); render(); }
+          }, "🗑")
+        ]),
+        h("div", { class: "note-content" }, n.text),
+      ]));
+    });
+  }
+
+  // 體重
+  parent.appendChild(h("div", { class: "section-title" }, "⚖️ 體重"));
+  const weightInputEl = h("input", {
+    class: "form-input", type: "number", step: "0.1",
+    placeholder: "kg", value: weightInput,
+    oninput: (e) => { weightInput = e.target.value; }
+  });
+  parent.appendChild(h("div", { class: "ring-card" }, [
+    h("div", { style: { display: "flex", gap: "8px" } }, [
+      weightInputEl,
+      h("button", {
+        class: "primary-btn",
+        style: { width: "auto", padding: "10px 18px" },
+        onclick: () => {
+          const w = parseFloat(weightInput);
+          if (!isNaN(w)) { state.data.weight = w; saveDay(); render(); }
+        }
+      }, "✓")
+    ]),
+    state.data.weight ? h("div", {
+      style: { fontSize: "13px", color: "#6B7A6B", marginTop: "8px" }
+    }, [h("span", {}, "今日記錄："), h("strong", {}, `${state.data.weight} kg`)]) : null
+  ]));
+
+  // 身體狀態
+  parent.appendChild(h("div", { class: "section-title" }, "❤️ 身體狀態"));
+  const chipRow = h("div", { class: "chip-row", style: { marginBottom: "10px" } });
+  BODY_TAGS.forEach(t => {
+    const chip = h("button", {
+      class: "chip",
+      onclick: () => {
+        if (bodyTags.includes(t)) bodyTags = bodyTags.filter(x => x !== t);
+        else bodyTags = [...bodyTags, t];
+        chip.classList.toggle("selected");
+      }
+    }, t);
+    chipRow.appendChild(chip);
+  });
+  const bodyNoteEl = h("textarea", {
+    class: "form-input",
+    placeholder: "補充說明（可選）",
+    style: { marginBottom: "8px" },
+    oninput: (e) => { bodyNote = e.target.value; }
+  });
+  parent.appendChild(h("div", { class: "ring-card" }, [
+    chipRow, bodyNoteEl,
+    h("button", {
+      class: "primary-btn",
+      onclick: () => {
+        if (bodyTags.length === 0 && !bodyNote.trim()) return;
+        state.data.body = state.data.body || [];
+        state.data.body.push({ time: nowTime(), tags: bodyTags, note: bodyNote.trim() });
+        saveDay(); render();
+      }
+    }, "+ 新增狀態")
+  ]));
+
+  if (state.data.body?.length) {
+    state.data.body.forEach((b, i) => {
+      const tagsRow = h("div", { class: "chip-row" });
+      b.tags.forEach(t => tagsRow.appendChild(h("span", { class: "chip selected" }, t)));
+      parent.appendChild(h("div", { class: "note-item" }, [
+        h("div", { style: { display: "flex", justifyContent: "space-between" } }, [
+          h("div", { class: "note-time" }, b.time),
+          h("button", {
+            class: "icon-btn",
+            onclick: () => { state.data.body.splice(i, 1); saveDay(); render(); }
+          }, "🗑")
+        ]),
+        tagsRow,
+        b.note ? h("div", { class: "note-content", style: { marginTop: "6px" } }, b.note) : null
+      ]));
+    });
+  }
+
+  // 運動
+  parent.appendChild(h("div", { class: "section-title" }, "🏃 運動"));
+  const exChipRow = h("div", { class: "chip-row" });
+  EX_TYPES.forEach(t => {
+    const chip = h("button", {
+      class: "chip",
+      onclick: () => {
+        exType = t;
+        exChipRow.querySelectorAll(".chip").forEach(c => c.classList.remove("selected"));
+        chip.classList.add("selected");
+      }
+    }, t);
+    exChipRow.appendChild(chip);
+  });
+  parent.appendChild(h("div", { class: "ring-card" }, [
+    h("div", { class: "form-group" }, [h("div", { class: "form-label" }, "項目"), exChipRow]),
+    h("div", { class: "form-group" }, [
+      h("div", { class: "form-label" }, "時長（分鐘）"),
+      h("input", { class: "form-input", type: "number", placeholder: "例：45", oninput: (e) => { exDuration = e.target.value; } })
+    ]),
+    h("div", { class: "form-group" }, [
+      h("div", { class: "form-label" }, "備註"),
+      h("textarea", { class: "form-input", placeholder: "強度、感受、組數...", oninput: (e) => { exNote = e.target.value; } })
+    ]),
+    h("button", {
+      class: "primary-btn",
+      onclick: () => {
+        if (!exType) return;
+        state.data.exercise = state.data.exercise || [];
+        state.data.exercise.push({ time: nowTime(), type: exType, duration: exDuration, note: exNote.trim() });
+        saveDay(); render();
+      }
+    }, "+ 新增運動")
+  ]));
+
+  if (state.data.exercise?.length) {
+    state.data.exercise.forEach((e, i) => {
+      parent.appendChild(h("div", { class: "note-item" }, [
+        h("div", { style: { display: "flex", justifyContent: "space-between" } }, [
+          h("div", { class: "note-time" }, e.time),
+          h("button", {
+            class: "icon-btn",
+            onclick: () => { state.data.exercise.splice(i, 1); saveDay(); render(); }
+          }, "🗑")
+        ]),
+        h("div", { class: "note-content" }, [
+          h("strong", {}, e.type),
+          e.duration ? ` · ${e.duration} 分鐘` : ""
+        ]),
+        e.note ? h("div", { style: { fontSize: "13px", color: "#6B7A6B", marginTop: "4px" } }, e.note) : null
+      ]));
+    });
+  }
+}
+
+// ============ 歷史視圖（含體重曲線）============
+function renderHistory(parent) {
+  const keys = store.keys("day:");
+  const days = keys.map(k => ({ key: k.replace("day:", ""), data: store.get(k) })).filter(d => d.data);
+  days.sort((a, b) => b.key.localeCompare(a.key));
+
+  if (days.length === 0) {
+    parent.appendChild(h("div", { class: "empty-state" }, "還沒有歷史記錄"));
+    return;
+  }
+
+  // 體重曲線
+  const weightData = days
+    .filter(d => d.data.weight != null)
+    .map(d => ({ key: d.key, weight: d.data.weight }))
+    .sort((a, b) => a.key.localeCompare(b.key));
+
+  if (weightData.length >= 2) {
+    parent.appendChild(h("div", { class: "section-title" }, "📈 體重趨勢"));
+    const card = h("div", { class: "ring-card", style: { padding: "16px 8px 8px" } });
+    card.appendChild(renderWeightChart(weightData));
+
+    const first = weightData[0].weight;
+    const last = weightData[weightData.length - 1].weight;
+    const diff = last - first;
+    const sign = diff > 0 ? "+" : "";
+    const diffColor = diff > 0 ? "#B07A3F" : diff < 0 ? "#4A6741" : "#6B7A6B";
+
+    card.appendChild(h("div", {
+      style: { display: "flex", justifyContent: "space-between", padding: "8px 12px 0", fontSize: "12px", color: "#6B7A6B" }
+    }, [
+      h("span", {}, `共 ${weightData.length} 筆`),
+      h("span", {}, [
+        `${first} → `,
+        h("strong", {}, `${last} kg`),
+        h("span", { style: { color: diffColor, marginLeft: "6px" } }, `(${sign}${diff.toFixed(1)})`)
+      ])
+    ]));
+    parent.appendChild(card);
+  }
+
+  const visibleEls = ELEMENTS.filter(e => state.goals[e.key]?.enabled !== false);
+
+  parent.appendChild(h("div", { class: "section-title" }, "最近紀錄"));
+
+  days.forEach(({ key, data }) => {
+    const bars = h("div", { class: "mini-bars" });
+    visibleEls.forEach(el => {
+      const goal = state.goals[el.key] || { min: 1, max: 1 };
+      const cur = data.servings?.[el.key] || 0;
+      const pct = goal.max > 0 ? Math.min((cur / goal.max) * 100, 100) : 0;
+      const ok = cur >= goal.min && cur <= goal.max;
+      const over = cur > goal.max;
+      bars.appendChild(h("div", { class: "mini-bar", title: el.label }, [
+        h("div", {
+          class: "mini-bar-fill",
+          style: { height: `${pct}%`, background: over ? "#B04F4F" : ok ? "#4A6741" : el.color }
+        })
+      ]));
+    });
+
+    parent.appendChild(h("div", {
+      class: "history-row",
+      onclick: () => { loadDay(key); state.tab = "today"; render(); }
+    }, [
+      h("div", {}, [
+        h("div", { class: "history-date" }, formatDate(key)),
+        h("div", { style: { fontSize: "11px", color: "#8A998A", marginTop: "2px" } },
+          `${data.weight ? data.weight + "kg · " : ""}${data.notes?.length || 0} 筆飲食 · ${data.exercise?.length || 0} 筆運動`)
+      ]),
+      bars
+    ]));
+  });
+}
+
+// ============ SVG 體重曲線 ============
+function renderWeightChart(data) {
+  const W = 440, H = 200, padL = 36, padR = 12, padT = 16, padB = 24;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const weights = data.map(d => d.weight);
+  const minW = Math.min(...weights);
+  const maxW = Math.max(...weights);
+  const range = Math.max(maxW - minW, 1);
+  const yMin = minW - range * 0.15;
+  const yMax = maxW + range * 0.15;
+  const yRange = yMax - yMin;
+
+  const xStep = data.length > 1 ? plotW / (data.length - 1) : plotW;
+  const points = data.map((d, i) => ({
+    x: padL + i * xStep,
+    y: padT + plotH - ((d.weight - yMin) / yRange) * plotH,
+    label: formatDate(d.key),
+    weight: d.weight,
+  }));
+
+  const pathD = points.map((p, i) => (i === 0 ? "M" : "L") + p.x + "," + p.y).join(" ");
+
+  // Y 軸刻度（3 條）
+  const yTicks = [yMin, (yMin + yMax) / 2, yMax];
+
+  // X 軸標籤（最多 5 個）
+  const labelStep = Math.max(1, Math.ceil(data.length / 5));
+  const xLabels = points.filter((_, i) => i % labelStep === 0 || i === points.length - 1);
+
+  const container = h("div", { class: "chart-container" });
+  container.innerHTML = `
+    <svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+      ${yTicks.map(t => {
+        const y = padT + plotH - ((t - yMin) / yRange) * plotH;
+        return `<line class="chart-grid" x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}"/>
+                <text class="chart-axis" x="${padL - 6}" y="${y + 3}" text-anchor="end">${t.toFixed(1)}</text>`;
+      }).join("")}
+      ${xLabels.map(p => `<text class="chart-axis" x="${p.x}" y="${H - 6}" text-anchor="middle">${p.label}</text>`).join("")}
+      <path class="chart-line" d="${pathD}"/>
+      ${points.map(p => `<circle class="chart-dot" cx="${p.x}" cy="${p.y}" r="3.5"><title>${p.label}: ${p.weight} kg</title></circle>`).join("")}
+    </svg>
+  `;
+  return container;
+}
+
+// ============ 食物庫 ============
+function renderFoods(parent) {
+  if (!state.foodSearch) state.foodSearch = "";
+  if (!state.foodCategory) state.foodCategory = "全部";
+
+  parent.appendChild(h("div", { class: "section-title" }, [
+    "🗂 食物資料庫 ",
+    h("span", { style: { fontSize: "12px", color: "#8A998A", fontWeight: "400" } }, `(${state.foods.length} 樣)`)
+  ]));
+
+  parent.appendChild(h("div", { style: { display: "flex", gap: "8px", marginBottom: "12px" } }, [
+    h("button", {
+      class: "primary-btn", style: { flex: "1" },
+      onclick: () => openFoodEdit({})
+    }, "+ 新增"),
+    h("button", {
+      class: "secondary-btn", style: { flex: "1" },
+      onclick: () => {
+        const existing = new Set(state.foods.map(f => f.name));
+        const toAdd = DEFAULT_FOODS
+          .filter(f => !existing.has(f.name))
+          .map(f => ({ ...f, id: Date.now().toString() + Math.random().toString(36).slice(2, 8) }));
+        if (toAdd.length === 0) { alert("預設食物已全部載入過了"); return; }
+        if (confirm(`將新增 ${toAdd.length} 樣食物（已存在會跳過）`)) {
+          state.foods = [...state.foods, ...toAdd];
+          store.set("foods", state.foods);
+          render();
+        }
+      }
+    }, "載入預設庫")
+  ]));
+
+  if (state.foods.length > 0) {
+    parent.appendChild(h("input", {
+      class: "form-input",
+      placeholder: "搜尋食物...",
+      value: state.foodSearch,
+      style: { marginBottom: "10px" },
+      oninput: (e) => { state.foodSearch = e.target.value; render(); }
+    }));
+
+    const categories = ["全部", ...Array.from(new Set(state.foods.map(f => f.category).filter(Boolean)))];
+    if (categories.length > 1) {
+      const chipRow = h("div", { class: "chip-row", style: { marginBottom: "12px" } });
+      categories.forEach(c => {
+        chipRow.appendChild(h("button", {
+          class: "chip" + (state.foodCategory === c ? " selected" : ""),
+          onclick: () => { state.foodCategory = c; render(); }
+        }, c));
+      });
+      parent.appendChild(chipRow);
+    }
+  }
+
+  if (state.foods.length === 0) {
+    parent.appendChild(h("div", { class: "empty-state" }, [
+      "尚未新增任何食物",
+      h("br"),
+      h("span", { style: { fontSize: "12px" } }, "可點上方「載入預設庫」載入 152 樣常見食物 + 7-11 品項")
+    ]));
+    return;
+  }
+
+  const filtered = state.foods.filter(f => {
+    if (state.foodCategory !== "全部" && f.category !== state.foodCategory) return false;
+    if (state.foodSearch && !f.name.toLowerCase().includes(state.foodSearch.toLowerCase())) return false;
+    return true;
+  });
+
+  filtered.forEach(food => {
+    const contribs = Object.entries(food.contributions || {}).filter(([, v]) => v > 0);
+    const nameNode = h("div", { class: "food-name" }, [
+      food.name,
+      food.isEstimate ? h("span", {
+        style: {
+          fontSize: "10px", marginLeft: "6px", padding: "1px 6px",
+          borderRadius: "6px", background: "#F5E5D5", color: "#B07A3F"
+        }
+      }, "估算") : null
+    ]);
+    parent.appendChild(h("div", { class: "food-item" }, [
+      h("div", { class: "food-info" }, [
+        nameNode,
+        h("div", { class: "food-meta" },
+          (food.amount ? food.amount + " · " : "") +
+          contribs.map(([k, v]) => {
+            const el = ELEMENTS.find(e => e.key === k);
+            return el ? `${el.emoji}${v}` : "";
+          }).join(" ")
+        )
+      ]),
+      h("div", { class: "food-actions" }, [
+        h("button", { class: "icon-btn", onclick: () => openFoodEdit(food) }, "✏️"),
+        h("button", {
+          class: "icon-btn",
+          onclick: () => {
+            if (confirm("確定刪除這項食物？")) {
+              state.foods = state.foods.filter(f => f.id !== food.id);
+              store.set("foods", state.foods);
+              render();
+            }
+          }
+        }, "🗑")
+      ])
+    ]));
+  });
+}
+
+// ============ 設定 ============
+function renderSettings(parent) {
+  parent.appendChild(h("div", { class: "section-title" }, "⚙️ 每日份量目標"));
+
+  parent.appendChild(h("button", {
+    class: "primary-btn",
+    style: { marginBottom: "16px" },
+    onclick: () => openWizard()
+  }, "使用建議值精靈"));
+
+  if (state.goals._meta) {
+    parent.appendChild(h("div", { class: "analysis-result", style: { marginBottom: "16px" } }, [
+      h("div", { style: { fontSize: "12px", color: "#6B7A6B" } }, [
+        "目前目標熱量：",
+        h("strong", { style: { color: "#2D3D2A" } }, `${state.goals._meta.targetCal} kcal`),
+        `（TDEE ${state.goals._meta.tdee}）`
+      ])
+    ]));
+  }
+
+  ELEMENTS.forEach(el => {
+    const g = state.goals[el.key] || { min: 0, max: 0, enabled: true };
+    const row = h("div", { class: "goal-row" }, [
+      h("div", { class: "goal-row-top" }, [
+        h("div", { class: "goal-name" }, [
+          h("span", { style: { fontSize: "20px" } }, el.emoji),
+          el.label,
+          el.optional ? h("span", { style: { fontSize: "11px", color: "#8A998A" } }, "（可選）") : null
+        ]),
+        h("div", {
+          class: "toggle" + (g.enabled !== false ? " on" : ""),
+          onclick: () => {
+            state.goals[el.key] = { ...g, enabled: g.enabled === false ? true : false };
+            store.set("goals", state.goals);
+            render();
+          }
+        })
+      ]),
+      g.enabled !== false ? h("div", { class: "range-row" }, [
+        h("input", {
+          class: "form-input", type: "number",
+          step: el.isWater ? "50" : "0.5",
+          value: g.min,
+          oninput: (e) => {
+            state.goals[el.key] = { ...g, min: parseFloat(e.target.value) || 0 };
+            store.set("goals", state.goals);
+          }
+        }),
+        h("span", {}, "～"),
+        h("input", {
+          class: "form-input", type: "number",
+          step: el.isWater ? "50" : "0.5",
+          value: g.max,
+          oninput: (e) => {
+            state.goals[el.key] = { ...g, max: parseFloat(e.target.value) || 0 };
+            store.set("goals", state.goals);
+          }
+        }),
+        h("span", { style: { minWidth: "30px" } }, el.unit || "份")
+      ]) : null
+    ]);
+    parent.appendChild(row);
+  });
+
+  // API 金鑰設定
+  parent.appendChild(h("div", { class: "section-title", style: { marginTop: "24px" } }, "🔑 拍照分析設定"));
+  parent.appendChild(h("div", { class: "ring-card" }, [
+    h("div", { class: "form-label" }, "Anthropic API 金鑰"),
+    h("input", {
+      class: "form-input", type: "password",
+      placeholder: "sk-ant-...", value: state.apiKey,
+      style: { marginBottom: "8px" },
+      oninput: (e) => {
+        state.apiKey = e.target.value;
+        store.set("apiKey", state.apiKey);
+      }
+    }),
+    h("div", { style: { fontSize: "11px", color: "#8A998A", lineHeight: "1.5" } },
+      "拍照分析會呼叫 Claude API。金鑰只存在本機，不會傳送到其他地方。可至 console.anthropic.com 取得。沒填也能正常使用其他功能。"
+    )
+  ]));
+
+  // 資料管理
+  parent.appendChild(h("div", { class: "section-title", style: { marginTop: "24px" } }, "💾 資料管理"));
+  parent.appendChild(h("button", {
+    class: "secondary-btn",
+    style: { marginBottom: "8px", width: "100%" },
+    onclick: () => {
+      const data = {};
+      Object.keys(localStorage).forEach(k => { data[k] = localStorage.getItem(k); });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `diet-backup-${todayKey()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  }, "匯出所有資料"));
+
+  const importInput = h("input", {
+    type: "file", accept: "application/json",
+    style: { display: "none" },
+    onchange: (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          if (confirm("匯入會覆蓋目前資料，確定？")) {
+            Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, v));
+            location.reload();
+          }
+        } catch { alert("檔案格式錯誤"); }
+      };
+      reader.readAsText(file);
+    }
+  });
+  parent.appendChild(importInput);
+  parent.appendChild(h("button", {
+    class: "secondary-btn",
+    style: { width: "100%" },
+    onclick: () => importInput.click()
+  }, "匯入備份"));
+}
+
+// ============ Modals ============
+function openModal(fn) { state.modal = fn; render(); }
+function closeModal() { state.modal = null; render(); }
+
+function openFoodEdit(food) {
+  let name = food.name || "", amount = food.amount || "", contribs = { ...(food.contributions || {}) };
+  openModal(() => {
+    const overlay = h("div", { class: "modal-overlay", onclick: closeModal });
+    const modal = h("div", { class: "modal", onclick: (e) => e.stopPropagation() }, [
+      h("div", { class: "modal-header" }, [
+        h("div", { class: "modal-title" }, food.id ? "編輯食物" : "新增食物"),
+        h("button", { class: "icon-btn", onclick: closeModal }, "✕")
+      ]),
+      h("div", { class: "form-group" }, [
+        h("div", { class: "form-label" }, "名稱"),
+        h("input", { class: "form-input", value: name, oninput: (e) => { name = e.target.value; }, placeholder: "例：雞胸肉便當" })
+      ]),
+      h("div", { class: "form-group" }, [
+        h("div", { class: "form-label" }, "份量描述"),
+        h("input", { class: "form-input", value: amount, oninput: (e) => { amount = e.target.value; }, placeholder: "例：一個便當、半碗" })
+      ]),
+      h("div", { class: "form-label", style: { marginBottom: "10px" } }, "包含份量"),
+      ...ELEMENTS.map(el => h("div", { class: "form-group", style: { display: "flex", alignItems: "center", gap: "10px" } }, [
+        h("div", { style: { width: "80px", fontSize: "14px" } }, `${el.emoji} ${el.label}`),
+        h("input", {
+          class: "form-input", type: "number",
+          step: el.isWater ? "50" : "0.1",
+          value: contribs[el.key] || "", placeholder: "0",
+          oninput: (e) => { contribs[el.key] = parseFloat(e.target.value) || 0; }
+        })
+      ])),
+      h("button", {
+        class: "primary-btn", style: { marginTop: "16px" },
+        onclick: () => {
+          if (!name.trim()) return;
+          const newFood = { name: name.trim(), amount, contributions: contribs, id: food.id || Date.now().toString() };
+          if (food.id) state.foods = state.foods.map(f => f.id === food.id ? newFood : f);
+          else state.foods = [...state.foods, newFood];
+          store.set("foods", state.foods);
+          closeModal();
+        }
+      }, "✓ 儲存")
+    ]);
+    overlay.appendChild(modal);
+    return overlay;
+  });
+}
+
+function openFoodPicker() {
+  let search = "", picked = null, mult = 1;
+  openModal(() => {
+    const overlay = h("div", { class: "modal-overlay", onclick: closeModal });
+
+    if (picked) {
+      const modal = h("div", { class: "modal", onclick: (e) => e.stopPropagation() }, [
+        h("div", { class: "modal-header" }, [
+          h("div", { class: "modal-title" }, picked.name),
+          h("button", { class: "icon-btn", onclick: () => { picked = null; render(); } }, "✕")
+        ]),
+        h("div", { class: "form-group" }, [
+          h("div", { class: "form-label" }, "份數倍率"),
+          h("div", { style: { display: "flex", gap: "8px", alignItems: "center" } }, [
+            h("button", { class: "qbtn", style: { flex: "0 0 50px" }, onclick: () => { mult = Math.max(0.5, mult - 0.5); render(); } }, "−"),
+            h("input", { class: "num-input", type: "number", step: "0.5", value: mult, oninput: (e) => { mult = parseFloat(e.target.value) || 1; } }),
+            h("button", { class: "qbtn", style: { flex: "0 0 50px" }, onclick: () => { mult += 0.5; render(); } }, "+")
+          ])
+        ]),
+        h("div", { class: "analysis-result" }, [
+          h("div", { class: "form-label" }, "將會新增"),
+          ...Object.entries(picked.contributions || {}).filter(([, v]) => v > 0).map(([k, v]) => {
+            const el = ELEMENTS.find(e => e.key === k);
+            return h("div", {}, `${el?.emoji} ${el?.label}：+${(v * mult).toFixed(1)} ${el?.unit || "份"}`);
+          })
+        ]),
+        h("button", {
+          class: "primary-btn",
+          onclick: () => {
+            Object.entries(picked.contributions || {}).forEach(([k, v]) => {
+              const isW = k === "water";
+              const cur = state.data.servings[k] || 0;
+              state.data.servings[k] = isW
+                ? Math.round(cur + v * mult)
+                : +(cur + v * mult).toFixed(1);
+            });
+            state.data.notes = state.data.notes || [];
+            state.data.notes.push({ time: nowTime(), text: `${picked.name} × ${mult}` });
+            saveDay();
+            closeModal();
+          }
+        }, "✓ 加入今日")
+      ]);
+      overlay.appendChild(modal);
+      return overlay;
+    }
+
+    const list = h("div");
+    const renderList = () => {
+      list.innerHTML = "";
+      const filtered = state.foods.filter(f => f.name.includes(search));
+      if (filtered.length === 0) {
+        list.appendChild(h("div", { class: "empty-state" }, "沒有相符的食物"));
+        return;
+      }
+      filtered.forEach(food => {
+        const contribs = Object.entries(food.contributions || {}).filter(([, v]) => v > 0);
+        list.appendChild(h("div", {
+          class: "food-item",
+          style: { cursor: "pointer" },
+          onclick: () => { picked = food; render(); }
+        }, [
+          h("div", { class: "food-info" }, [
+            h("div", { class: "food-name" }, [
+              food.name,
+              food.isEstimate ? h("span", {
+                style: {
+                  fontSize: "10px", marginLeft: "6px", padding: "1px 6px",
+                  borderRadius: "6px", background: "#F5E5D5", color: "#B07A3F"
+                }
+              }, "估算") : null
+            ]),
+            h("div", { class: "food-meta" },
+              (food.amount ? food.amount + " · " : "") +
+              contribs.map(([k, v]) => {
+                const el = ELEMENTS.find(e => e.key === k);
+                return el ? `${el.emoji}${v}` : "";
+              }).join(" ")
+            )
+          ]),
+          h("span", { style: { color: "#8A998A" } }, "›")
+        ]));
+      });
+    };
+    renderList();
+
+    const modal = h("div", { class: "modal", onclick: (e) => e.stopPropagation() }, [
+      h("div", { class: "modal-header" }, [
+        h("div", { class: "modal-title" }, "選擇食物"),
+        h("button", { class: "icon-btn", onclick: closeModal }, "✕")
+      ]),
+      h("input", {
+        class: "form-input",
+        placeholder: "搜尋...",
+        style: { marginBottom: "12px" },
+        oninput: (e) => { search = e.target.value; renderList(); }
+      }),
+      list
+    ]);
+    overlay.appendChild(modal);
+    return overlay;
+  });
+}
+
+function openPhotoModal() {
+  if (!state.apiKey) {
+    alert("請先到「設定」頁填入 Anthropic API 金鑰");
+    state.tab = "settings"; render();
+    return;
+  }
+
+  let imageData = null, imageMime = null, analyzing = false, result = null, error = null;
+
+  const fileInput = h("input", {
+    type: "file", accept: "image/*", capture: "environment",
+    style: { display: "none" }
+  });
+
+  fileInput.onchange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    imageMime = file.type;
+    const reader = new FileReader();
+    reader.onload = () => { imageData = reader.result; result = null; error = null; render(); };
+    reader.readAsDataURL(file);
+  };
+
+  const analyze = async () => {
+    if (!imageData) return;
+    analyzing = true; error = null; render();
+    try {
+      const base64 = imageData.split(",")[1];
+      const prompt = `這是一張食物照片，請以台灣營養份量單位估算各類份量。
+
+份量定義：
+- 蛋白質1份 ≈ 7g 蛋白質（約 1 顆蛋、35g 熟肉、半盒豆腐）
+- 主食1份 ≈ 15g 醣（約 1/4 碗白飯、半碗麵、半個饅頭）
+- 蔬菜1份 ≈ 100g 生重（約半碗熟青菜）
+- 奶製品1份 ≈ 240ml 牛奶或同等
+- 油脂1份 ≈ 5g 油（約 1 茶匙油、1/3 湯匙堅果）
+
+請回傳 JSON（不要 markdown 不要其他文字）：
+{
+  "description": "食物描述（中文，簡短，30字內）",
+  "contributions": {
+    "protein": 數字, "staple": 數字, "veg": 數字,
+    "dairy": 數字, "fat": 數字, "water": 0, "other": 0
+  },
+  "confidence": "高/中/低",
+  "note": "可能需要注意的部分（中文，可選）"
+}`;
+
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": state.apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: imageMime, data: base64 } },
+              { type: "text", text: prompt }
+            ]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error?.message || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      const text = data.content.map(i => i.text || "").filter(Boolean).join("\n");
+      const clean = text.replace(/```json|```/g, "").trim();
+      result = JSON.parse(clean);
+    } catch (e) {
+      console.error(e);
+      error = "分析失敗：" + e.message + "。可以直接手動加入份量。";
+    } finally {
+      analyzing = false;
+      render();
+    }
+  };
+
+  openModal(() => {
+    const overlay = h("div", { class: "modal-overlay", onclick: closeModal });
+    const children = [
+      h("div", { class: "modal-header" }, [
+        h("div", { class: "modal-title" }, "拍照分析"),
+        h("button", { class: "icon-btn", onclick: closeModal }, "✕")
+      ]),
+      fileInput,
+    ];
+
+    if (!imageData) {
+      children.push(h("div", { class: "photo-area", onclick: () => fileInput.click() }, [
+        h("div", { style: { fontSize: "32px", marginBottom: "8px" } }, "📷"),
+        h("div", {}, "點此拍照或選照片")
+      ]));
+    }
+
+    if (imageData) {
+      children.push(h("img", { src: imageData, class: "photo-preview" }));
+      children.push(h("div", { style: { display: "flex", gap: "8px", marginBottom: "12px" } }, [
+        h("button", { class: "secondary-btn", style: { flex: "1" }, onclick: () => fileInput.click() }, "換張照片"),
+        !result ? h("button", {
+          class: "primary-btn", style: { flex: "2" },
+          onclick: analyze, disabled: analyzing
+        }, analyzing ? "分析中..." : "開始分析") : null
+      ].filter(Boolean)));
+    }
+
+    if (error) {
+      children.push(h("div", { class: "analysis-result", style: { background: "#F5D5D5", color: "#B04F4F" } }, error));
+    }
+
+    if (result) {
+      children.push(h("div", { class: "analysis-result" }, [
+        h("div", { style: { fontWeight: "500", marginBottom: "4px" } }, result.description),
+        h("div", { style: { fontSize: "12px", color: "#6B7A6B" } }, `信心度：${result.confidence}`),
+        result.note ? h("div", { style: { fontSize: "12px", color: "#6B7A6B", marginTop: "4px" } }, `※ ${result.note}`) : null
+      ]));
+      children.push(h("div", { class: "form-label", style: { marginBottom: "10px" } }, "估算份量（可調整）"));
+      ELEMENTS.filter(el => el.key !== "water" && el.key !== "other").forEach(el => {
+        children.push(h("div", { class: "form-group", style: { display: "flex", alignItems: "center", gap: "10px" } }, [
+          h("div", { style: { width: "80px", fontSize: "14px" } }, `${el.emoji} ${el.label}`),
+          h("input", {
+            class: "form-input", type: "number", step: "0.1",
+            value: result.contributions[el.key] || 0,
+            oninput: (e) => { result.contributions[el.key] = parseFloat(e.target.value) || 0; }
+          })
+        ]));
+      });
+      children.push(h("button", {
+        class: "primary-btn", style: { marginTop: "12px" },
+        onclick: () => {
+          Object.entries(result.contributions).forEach(([k, v]) => {
+            const isW = k === "water";
+            const cur = state.data.servings[k] || 0;
+            state.data.servings[k] = isW ? Math.round(cur + v) : +(cur + v).toFixed(1);
+          });
+          state.data.notes = state.data.notes || [];
+          state.data.notes.push({ time: nowTime(), text: result.description || "拍照記錄" });
+          saveDay();
+          closeModal();
+        }
+      }, "✓ 加入今日"));
+    }
+
+    const modal = h("div", { class: "modal", onclick: (e) => e.stopPropagation() }, children);
+    overlay.appendChild(modal);
+    return overlay;
+  });
+}
+
+function openWizard() {
+  let step = 1, bmr = "", activity = 1.55, goalType = "";
+  const ACTIVITIES = [
+    { v: 1.2, label: "久坐", desc: "幾乎不運動" },
+    { v: 1.375, label: "輕度", desc: "每週 1-3 次" },
+    { v: 1.55, label: "中度", desc: "每週 3-5 次" },
+    { v: 1.725, label: "高度", desc: "每週 6-7 次" },
+    { v: 1.9, label: "極高", desc: "教練/體力工作" },
+  ];
+  const GOALS = [
+    { v: "cut-fast", label: "快速減脂", desc: "-500 kcal" },
+    { v: "cut-mid", label: "中度減脂", desc: "-350 kcal" },
+    { v: "cut-slow", label: "緩慢減脂", desc: "-200 kcal" },
+    { v: "maintain", label: "維持", desc: "TDEE" },
+    { v: "gain-slow", label: "緩慢增肌", desc: "+200 kcal" },
+    { v: "gain-mid", label: "中度增肌", desc: "+350 kcal" },
+    { v: "gain-fast", label: "快速增肌", desc: "+500 kcal" },
+  ];
+
+  openModal(() => {
+    const overlay = h("div", { class: "modal-overlay", onclick: closeModal });
+    const children = [
+      h("div", { class: "modal-header" }, [
+        h("div", { class: "modal-title" }, "建議值精靈"),
+        h("button", { class: "icon-btn", onclick: closeModal }, "✕")
+      ])
+    ];
+
+    if (step === 1) {
+      children.push(h("div", { class: "form-group" }, [
+        h("div", { class: "form-label" }, "基礎代謝率 BMR（kcal/日）"),
+        h("input", {
+          class: "form-input", type: "number",
+          value: bmr, placeholder: "例：1350",
+          oninput: (e) => { bmr = e.target.value; render(); }
+        }),
+        h("div", { style: { fontSize: "11px", color: "#8A998A", marginTop: "4px" } },
+          "若不確定，可用 InBody 或公式估算（女性：655 + 9.6×kg + 1.8×cm − 4.7×歲）")
+      ]));
+      children.push(h("div", { class: "form-group" }, [
+        h("div", { class: "form-label" }, "活動量"),
+        ...ACTIVITIES.map(a => h("div", {
+          class: "action-card" + (activity === a.v ? " selected" : ""),
+          onclick: () => { activity = a.v; render(); }
+        }, [
+          h("div", {}, [
+            h("div", { style: { fontWeight: "500" } }, a.label),
+            h("div", { style: { fontSize: "12px", color: "#6B7A6B" } }, a.desc)
+          ]),
+          h("div", { style: { fontSize: "13px", color: "#6B7A6B" } }, `×${a.v}`)
+        ]))
+      ]));
+      children.push(h("button", {
+        class: "primary-btn", disabled: !bmr,
+        onclick: () => { step = 2; render(); }
+      }, "下一步"));
+    } else {
+      children.push(h("div", { style: { fontSize: "13px", color: "#6B7A6B", marginBottom: "12px" } }, [
+        "估計 TDEE：", h("strong", { style: { color: "#2D3D2A" } }, `${Math.round(parseFloat(bmr) * activity)} kcal`)
+      ]));
+      children.push(h("div", { class: "form-label", style: { marginBottom: "10px" } }, "目標"));
+      GOALS.forEach(g => children.push(h("div", {
+        class: "action-card" + (goalType === g.v ? " selected" : ""),
+        onclick: () => { goalType = g.v; render(); }
+      }, [
+        h("div", { style: { fontWeight: "500" } }, g.label),
+        h("div", { style: { fontSize: "13px", color: "#6B7A6B" } }, g.desc)
+      ])));
+      children.push(h("div", { style: { display: "flex", gap: "8px", marginTop: "16px" } }, [
+        h("button", { class: "secondary-btn", style: { flex: "1" }, onclick: () => { step = 1; render(); } }, "上一步"),
+        h("button", {
+          class: "primary-btn", style: { flex: "2" }, disabled: !goalType,
+          onclick: () => {
+            const suggested = calcSuggestion(parseFloat(bmr), activity, goalType);
+            state.goals = suggested;
+            store.set("goals", state.goals);
+            closeModal();
+          }
+        }, "套用建議值")
+      ]));
+      children.push(h("div", {
+        style: { fontSize: "11px", color: "#8A998A", marginTop: "10px", textAlign: "center" }
+      }, "套用後可繼續手動微調"));
+    }
+
+    const modal = h("div", { class: "modal", onclick: (e) => e.stopPropagation() }, children);
+    overlay.appendChild(modal);
+    return overlay;
+  });
+}
+
+// ============ 啟動 ============
+render();
+
+// PWA Service Worker（離線可用）
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE = 'diet-v1';
+    self.addEventListener('install', e => self.skipWaiting());
+    self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+    self.addEventListener('fetch', e => {
+      if (e.request.method !== 'GET') return;
+      e.respondWith(
+        caches.open(CACHE).then(cache =>
+          cache.match(e.request).then(cached => {
+            const fetchPromise = fetch(e.request).then(res => {
+              if (res.ok && e.request.url.startsWith(self.location.origin)) {
+                cache.put(e.request, res.clone());
+              }
+              return res;
+            }).catch(() => cached);
+            return cached || fetchPromise;
+          })
+        )
+      );
+    });
+  `;
+  const blob = new Blob([swCode], { type: 'application/javascript' });
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(e => console.log('SW registration failed:', e));
+}
+</script>
+</body>
+</html>
