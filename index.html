@@ -647,6 +647,7 @@ const state = {
   goals: store.get("goals") || DEFAULT_GOALS,
   foods: store.get("foods") || [],
   apiKey: store.get("apiKey") || "",
+  apiProvider: store.get("apiProvider") || "gemini",
   currentDate: todayKey(),
   data: null,
   modal: null,
@@ -1336,21 +1337,79 @@ function renderSettings(parent) {
 
   // API 金鑰設定
   parent.appendChild(h("div", { class: "section-title", style: { marginTop: "24px" } }, "🔑 拍照分析設定"));
-  parent.appendChild(h("div", { class: "ring-card" }, [
-    h("div", { class: "form-label" }, "Anthropic API 金鑰"),
-    h("input", {
-      class: "form-input", type: "password",
-      placeholder: "sk-ant-...", value: state.apiKey,
-      style: { marginBottom: "8px" },
-      oninput: (e) => {
-        state.apiKey = e.target.value;
-        store.set("apiKey", state.apiKey);
+
+  const providerCard = h("div", { class: "ring-card" });
+
+  providerCard.appendChild(h("div", { class: "form-label" }, "AI 服務"));
+
+  const providerRow = h("div", { class: "chip-row", style: { marginBottom: "12px" } }, [
+    h("button", {
+      class: "chip" + (state.apiProvider === "gemini" ? " selected" : ""),
+      onclick: () => {
+        state.apiProvider = "gemini";
+        store.set("apiProvider", "gemini");
+        state.apiKey = "";
+        store.set("apiKey", "");
+        render();
       }
-    }),
-    h("div", { style: { fontSize: "11px", color: "#8A998A", lineHeight: "1.5" } },
-      "拍照分析會呼叫 Claude API。金鑰只存在本機，不會傳送到其他地方。可至 console.anthropic.com 取得。沒填也能正常使用其他功能。"
-    )
-  ]));
+    }, "Gemini（免費推薦）"),
+    h("button", {
+      class: "chip" + (state.apiProvider === "claude" ? " selected" : ""),
+      onclick: () => {
+        state.apiProvider = "claude";
+        store.set("apiProvider", "claude");
+        state.apiKey = "";
+        store.set("apiKey", "");
+        render();
+      }
+    }, "Claude（付費）")
+  ]);
+  providerCard.appendChild(providerRow);
+
+  const isGemini = state.apiProvider === "gemini";
+  providerCard.appendChild(h("div", { class: "form-label" }, isGemini ? "Gemini API 金鑰" : "Anthropic API 金鑰"));
+  providerCard.appendChild(h("input", {
+    class: "form-input", type: "password",
+    placeholder: isGemini ? "AIzaSy..." : "sk-ant-...",
+    value: state.apiKey,
+    style: { marginBottom: "8px" },
+    oninput: (e) => {
+      state.apiKey = e.target.value;
+      store.set("apiKey", state.apiKey);
+    }
+  }));
+
+  if (isGemini) {
+    providerCard.appendChild(h("div", { style: { fontSize: "11px", color: "#8A998A", lineHeight: "1.6" } }, [
+      "✓ 免費方案：每天 250 次請求",
+      h("br"),
+      "✓ 不用刷卡，只需 Google 帳號",
+      h("br"),
+      "申請：",
+      h("a", {
+        href: "https://aistudio.google.com/apikey",
+        target: "_blank",
+        style: { color: "#4A6741" }
+      }, "aistudio.google.com/apikey"),
+    ]));
+  } else {
+    providerCard.appendChild(h("div", { style: { fontSize: "11px", color: "#8A998A", lineHeight: "1.6" } }, [
+      "需先儲值，每張照片約 NT$0.3-1",
+      h("br"),
+      "申請：",
+      h("a", {
+        href: "https://console.anthropic.com",
+        target: "_blank",
+        style: { color: "#4A6741" }
+      }, "console.anthropic.com"),
+    ]));
+  }
+
+  providerCard.appendChild(h("div", {
+    style: { fontSize: "11px", color: "#8A998A", marginTop: "8px", lineHeight: "1.5" }
+  }, "金鑰只存在本機，不會傳送到其他地方。沒填也能正常使用其他功能。"));
+
+  parent.appendChild(providerCard);
 
   // 資料管理
   parent.appendChild(h("div", { class: "section-title", style: { marginTop: "24px" } }, "💾 資料管理"));
@@ -1551,7 +1610,7 @@ function openFoodPicker() {
 
 function openPhotoModal() {
   if (!state.apiKey) {
-    alert("請先到「設定」頁填入 Anthropic API 金鑰");
+    alert("請先到「設定」頁填入 AI 金鑰（推薦 Gemini，免費）");
     state.tab = "settings"; render();
     return;
   }
@@ -1583,6 +1642,7 @@ function openPhotoModal() {
 - 蛋白質1份 ≈ 7g 蛋白質（約 1 顆蛋、35g 熟肉、半盒豆腐）
 - 主食1份 ≈ 15g 醣（約 1/4 碗白飯、半碗麵、半個饅頭）
 - 蔬菜1份 ≈ 100g 生重（約半碗熟青菜）
+- 水果1份 ≈ 60大卡（約半根香蕉、1顆小蘋果、半碗西瓜）
 - 奶製品1份 ≈ 240ml 牛奶或同等
 - 油脂1份 ≈ 5g 油（約 1 茶匙油、1/3 湯匙堅果）
 
@@ -1590,41 +1650,71 @@ function openPhotoModal() {
 {
   "description": "食物描述（中文，簡短，30字內）",
   "contributions": {
-    "protein": 數字, "staple": 數字, "veg": 數字,
+    "protein": 數字, "staple": 數字, "veg": 數字, "fruit": 數字,
     "dairy": 數字, "fat": 數字, "water": 0, "other": 0
   },
   "confidence": "高/中/低",
   "note": "可能需要注意的部分（中文，可選）"
 }`;
 
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": state.apiKey,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{
-            role: "user",
-            content: [
-              { type: "image", source: { type: "base64", media_type: imageMime, data: base64 } },
-              { type: "text", text: prompt }
-            ]
-          }]
-        })
-      });
+      let text;
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error?.message || `HTTP ${response.status}`);
+      if (state.apiProvider === "gemini") {
+        // Gemini API
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${state.apiKey}`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { inline_data: { mime_type: imageMime, data: base64 } },
+                { text: prompt }
+              ]
+            }],
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 1000,
+              responseMimeType: "application/json"
+            }
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      } else {
+        // Claude API
+        const response = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": state.apiKey,
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-direct-browser-access": "true",
+          },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 1000,
+            messages: [{
+              role: "user",
+              content: [
+                { type: "image", source: { type: "base64", media_type: imageMime, data: base64 } },
+                { type: "text", text: prompt }
+              ]
+            }]
+          })
+        });
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || `HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        text = data.content.map(i => i.text || "").filter(Boolean).join("\n");
       }
 
-      const data = await response.json();
-      const text = data.content.map(i => i.text || "").filter(Boolean).join("\n");
       const clean = text.replace(/```json|```/g, "").trim();
       result = JSON.parse(clean);
     } catch (e) {
